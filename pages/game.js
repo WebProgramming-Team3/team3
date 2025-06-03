@@ -2,93 +2,379 @@
 class GamePage {
     constructor() {
         this.container = null;
-        this.currentStage = 2; // 사용자가 변경한 값 유지
+        this.canvas = null;
+        this.ctx = null;
+        this.currentStage = 2; // 현재 스테이지
         this.brickImageCounts = { 1: 2, 2: 5, 3: 5 }; // 스테이지별 벽돌 이미지 개수
-        this.ballPosition = { x: 620, y: 490 }; // 볼 위치 (동적 관리용)
-        this.paddlePosition = { x: 620, y: 500 }; // 패들 위치 (동적 관리용)
+        this.ballPosition = { x: 720, y: 590 }; // 볼 위치 
+        this.paddlePosition = { x: 720, y: 600 }; // 패들 위치 
         this.score = 0; // 점수 
+        this.images = {}; // 이미지 캐시
+        this.imagesLoaded = false;
+        this.brickGroups = []; // 벽돌 그룹 정보 저장
     }
 
     /**
-     * 게임 페이지 렌더링
+     * 이미지 로딩
+     */
+    async loadImages() {
+        const imagePaths = {
+            // 배경
+            'background-light': './assets/background/background-light.png',
+            'background-dark': './assets/background/background-dark.png',
+            
+            // 유틸리티
+            'timer': './assets/utils/timer.png',
+            'hand': './assets/utils/hand.png',
+            
+            // 볼
+            'ball_lev1_1': './assets/ball/ball_lev1_1.png',
+            'ball_lev2_1': './assets/ball/ball_lev2_1.png',
+            'ball_lev2_2': './assets/ball/ball_lev2_2.png',
+            'ball_lev3_1': './assets/ball/ball_lev3_1.png',
+            'ball_lev3_2': './assets/ball/ball_lev3_2.png',
+            'ball_lev3_3': './assets/ball/ball_lev3_3.png',
+            'ball_lev3_4': './assets/ball/ball_lev3_4.png',
+            
+            // 포켓몬 (스테이지별)
+            'poke_lev1_1': './assets/pokemon/poke_lev1_1.png',
+            'poke_lev1_2': './assets/pokemon/poke_lev1_2.png',
+            'poke_lev1_3': './assets/pokemon/poke_lev1_3.png',
+            'poke_lev2_1': './assets/pokemon/poke_lev2_1.png',
+            'poke_lev2_2': './assets/pokemon/poke_lev2_2.png',
+            'poke_lev2_3': './assets/pokemon/poke_lev2_3.png',
+            'poke_lev3_1': './assets/pokemon/poke_lev3_1.png',
+            'poke_lev3_2': './assets/pokemon/poke_lev3_2.png',
+            'poke_lev3_3': './assets/pokemon/poke_lev3_3.png',
+        };
+
+        // 벽돌 이미지들 동적 추가
+        for (let stage = 1; stage <= 3; stage++) {
+            const brickCount = this.brickImageCounts[stage] || 1;
+            for (let i = 1; i <= brickCount; i++) {
+                imagePaths[`brick_lev${stage}_${i}`] = `./assets/brick/brick_lev${stage}_${i}.png`;
+            }
+        }
+
+        const loadPromises = Object.entries(imagePaths).map(([key, path]) => {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    this.images[key] = img;
+                    resolve();
+                };
+                img.onerror = () => reject(new Error(`Failed to load image: ${path}`));
+                img.src = path;
+            });
+        });
+
+        try {
+            await Promise.all(loadPromises);
+            this.imagesLoaded = true;
+            console.log('All images loaded successfully');
+        } catch (error) {
+            console.error('Error loading images:', error);
+        }
+    }
+
+    /**
+     * 게임 페이지 렌더링 (Canvas 기반)
      */
     render() {
-        
-        const staticTimeLeft = 60; // 시간은 아직 정적 값으로 유지
-
-        // 설정 페이지에서 배경 설정을 가져옴
-        const backgroundSetting = typeof SettingsPage !== 'undefined' && SettingsPage.getBackgroundSetting ? 
-                                  SettingsPage.getBackgroundSetting() :
-                                  'light'; // SettingsPage가 없거나 메소드가 없으면 기본값 light
-
-        const backgroundImage = backgroundSetting === 'dark' ? 
-                                './assets/background/background-dark.png' : 
-                                './assets/background/background-light.png';
-
         return `
             <div class="game-page">
-                <!-- 배경 -->
-                <div class="game-background" style="background-image: url('${backgroundImage}');"></div>
-                
-                <!-- 헤더 영역 배경 -->
-                <div class="header-area-background">
-                    <!-- 기존 헤더 내용 -->
-                    <header class="game-header">
-                        <div class="stage-title">
-                            <span class="stage-text header-text-large">STAGE ${this.currentStage}</span>
-                        </div>
-                        <div class="score-container header-box">
-                            <span class="score-value header-text-large">SCORE ${this.score}</span>
-                        </div>
-                        <div class="timer-container header-box">
-                            <img src="./assets/utils/timer.png" alt="Timer Icon" class="timer-icon">
-                            <span class="timer-value header-text-large">${staticTimeLeft}</span>
-                        </div>
-                    </header>
-                </div>
-
-                <!-- 메인 게임 영역 -->
-                <div class="game-main">
-                    <div class="bricks-wrapper">
-                        <!-- 첫 번째 그룹 (예: 왼쪽) -->
-                        <div class="bricks-container bricks-group1">
-                            ${this.renderBricks(1, this.currentStage)}
-                        </div>
-
-                        <!-- 두 번째 그룹 (예: 중앙) -->
-                        <div class="bricks-container bricks-group2">
-                            ${this.renderBricks(2, this.currentStage)}
-                        </div>
-
-                        <!-- 세 번째 그룹 (예: 오른쪽) -->
-                        <div class="bricks-container bricks-group3">
-                            ${this.renderBricks(3, this.currentStage)}
-                        </div>
-                    </div>
-
-                    <!-- 게임 오브젝트들 -->
-                    <div class="game-objects">
-                        <div class="pokeball" style="left: ${this.ballPosition.x}px; top: ${this.ballPosition.y}px;">
-                            <img src="./assets/ball/ball_lev1_1.png" alt="Pokeball">
-                        </div>
-                        <div class="paddle" style="left: ${this.paddlePosition.x}px; top: ${this.paddlePosition.y}px;">
-                            <img src="./assets/utils/hand.png" alt="Hand Paddle">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 푸터 -->
-                <footer class="game-footer">
-                    <div class="footer-info-box">
-                        ${this.renderCaughtPokemon()}
-                    </div>
-                </footer>
+                <canvas id="gameCanvas" width="1440" height="1024"></canvas>
             </div>
         `;
     }
 
+    /**
+     * 벽돌 그룹 정보 초기화 (게임 시작 시 한 번만)
+     */
+    initializeBrickGroups() {
+        this.brickGroups = [];
+        
+        for (let groupIndex = 1; groupIndex <= 3; groupIndex++) {
+            const maxBrickIndexForStage = this.brickImageCounts[this.currentStage] || 1;
+            const chosenRandomBrickIndex = Math.floor(Math.random() * maxBrickIndexForStage) + 1;
+            
+            const brickGroup = {
+                groupIndex: groupIndex,
+                brickImageKey: `brick_lev${this.currentStage}_${chosenRandomBrickIndex}`,
+                pokemonImageKey: `poke_lev${this.currentStage}_${groupIndex}`,
+                bricks: [] // 개별 벽돌 상태 (파괴되었는지 등)
+            };
+
+            // 3x3 그리드의 벽돌 상태 초기화 (디자인용 - 모두 표시)
+            for (let i = 0; i < 9; i++) {
+                brickGroup.bricks.push({
+                    isPokemon: i === 4 // 중앙(인덱스 4)이 포켓몬
+                });
+            }
+
+            this.brickGroups.push(brickGroup);
+        }
+    }
+
+    /**
+     * Canvas에 디자인 그리기 (정적)
+     */
+    drawDesign() {
+        if (!this.ctx || !this.imagesLoaded) return;
+
+        // 캔버스 초기화
+        this.ctx.clearRect(0, 0, 1440, 1024);
+
+        // 배경 그리기
+        this.drawBackground();
+
+        // 헤더 영역 그리기
+        this.drawHeader();
+
+        // 벽돌들 그리기
+        this.drawBricks();
+
+        // 게임 오브젝트들 그리기
+        this.drawGameObjects();
+
+        // 푸터 그리기
+        this.drawFooter();
+    }
+
+    /**
+     * 배경 그리기
+     */
+    drawBackground() {
+        const backgroundSetting = typeof SettingsPage !== 'undefined' && SettingsPage.getBackgroundSetting ? 
+                                  SettingsPage.getBackgroundSetting() : 'light';
+        
+        const backgroundKey = backgroundSetting === 'dark' ? 'background-dark' : 'background-light';
+        const backgroundImage = this.images[backgroundKey];
+        
+        if (backgroundImage) {
+            this.ctx.drawImage(backgroundImage, 0, 0, 1440, 1024);
+        }
+    }
+
+    /**
+     * 헤더 영역 그리기
+     */
+    drawHeader() {
+        const staticTimeLeft = 60;
+
+        // 헤더 배경 (반투명 흰색)
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        this.ctx.fillRect(0, 0, 1440, 137);
+
+        // 폰트 설정
+        this.ctx.font = "66px 'Bungee', cursive";
+        this.ctx.fillStyle = '#4F4F4F';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+
+        // STAGE 텍스트
+        const stageX = 720 - 168 - 300; // 중앙에서 왼쪽으로 이동
+        this.ctx.fillText(`STAGE ${this.currentStage}`, stageX, 68 + 5);
+
+        // SCORE 박스 그리기
+        this.drawHeaderBox(720, 68, 336, 97, `SCORE ${this.score}`);
+
+        // TIMER 박스 그리기
+        const timerX = 720 + 168 + 300; // 중앙에서 오른쪽으로 이동
+        this.drawTimerBox(timerX, 68, 200, 97, staticTimeLeft);
+    }
+
+    /**
+     * 둥근 모서리 사각형 그리기 헬퍼 함수
+     */
+    drawRoundedRect(x, y, width, height, radius) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(x + radius, y);
+        this.ctx.lineTo(x + width - radius, y);
+        this.ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        this.ctx.lineTo(x + width, y + height - radius);
+        this.ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        this.ctx.lineTo(x + radius, y + height);
+        this.ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        this.ctx.lineTo(x, y + radius);
+        this.ctx.quadraticCurveTo(x, y, x + radius, y);
+        this.ctx.closePath();
+    }
+
+    /**
+     * 헤더 박스 그리기
+     */
+    drawHeaderBox(centerX, centerY, width, height, text) {
+        const x = centerX - width / 2;
+        const y = centerY - height / 2;
+        const borderRadius = 10;
+
+        // 둥근 모서리 박스 그리기
+        this.drawRoundedRect(x, y, width, height, borderRadius);
+        
+        // 박스 배경 (흰색)
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.fill();
+        
+        // 박스 테두리 (녹색, 4px)
+        this.ctx.strokeStyle = '#60CD52';
+        this.ctx.lineWidth = 4;
+        this.ctx.stroke();
+
+        // 텍스트
+        this.ctx.fillStyle = '#4F4F4F';
+        this.ctx.fillText(text, centerX, centerY + 5);
+    }
+
+    /**
+     * 타이머 박스 그리기 (아이콘 포함)
+     */
+    drawTimerBox(centerX, centerY, width, height, timeLeft) {
+        const x = centerX - width / 2;
+        const y = centerY - height / 2;
+        const borderRadius = 10;
+
+        // 둥근 모서리 박스 그리기
+        this.drawRoundedRect(x, y, width, height, borderRadius);
+        
+        // 박스 배경 (흰색)
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.fill();
+        
+        // 박스 테두리 (녹색)
+        this.ctx.strokeStyle = '#60CD52';
+        this.ctx.lineWidth = 4;
+        this.ctx.stroke();
+
+        // 타이머 아이콘
+        const timerImage = this.images['timer'];
+        if (timerImage) {
+            const iconSize = 48;
+            const iconX = centerX - 80; // 텍스트 왼쪽에 아이콘
+            const iconY = centerY - iconSize / 2;
+            this.ctx.drawImage(timerImage, iconX, iconY, iconSize, iconSize);
+        }
+
+        // 시간 텍스트
+        this.ctx.fillStyle = '#4F4F4F';
+        this.ctx.fillText(timeLeft.toString(), centerX + 24, centerY + 5);
+    }
+
+    /**
+     * 벽돌들 그리기
+     */
+    drawBricks() {
+        const startY = 177;
+        const groupWidth = 365;
+        const groupHeight = 365;
+        const spacing = (1350 - groupWidth * 3) / 2; // 그룹 간 간격
+        
+        // 3개 그룹 위치 계산
+        const groupPositions = [
+            { x: spacing / 2, y: startY }, // 첫 번째 그룹
+            { x: spacing / 2 + groupWidth + spacing, y: startY }, // 두 번째 그룹
+            { x: spacing / 2 + (groupWidth + spacing) * 2, y: startY } // 세 번째 그룹
+        ];
+
+        for (let groupIndex = 0; groupIndex < 3; groupIndex++) {
+            if (this.brickGroups[groupIndex]) {
+                this.drawBrickGroup(this.brickGroups[groupIndex], groupPositions[groupIndex]);
+            }
+        }
+    }
+
+    /**
+     * 개별 벽돌 그룹 그리기
+     */
+    drawBrickGroup(brickGroup, position) {
+        const cellSize = 90;
+        const gap = 40;
+        const totalCells = 9; // 3x3
+
+        // 저장된 벽돌 이미지 사용
+        const brickImage = this.images[brickGroup.brickImageKey];
+        const pokemonImage = this.images[brickGroup.pokemonImageKey];
+
+        for (let i = 0; i < totalCells; i++) {
+            const brick = brickGroup.bricks[i];
+            
+            const row = Math.floor(i / 3);
+            const col = i % 3;
+            const x = position.x + col * (cellSize + gap);
+            const y = position.y + row * (cellSize + gap);
+
+            if (brick.isPokemon) {
+                // 중앙에 포켓몬 이미지
+                if (pokemonImage) {
+                    this.ctx.drawImage(pokemonImage, x - 55, y - 55, 200, 200); // 포켓몬은 더 크게
+                }
+            } else {
+                // 벽돌 그리기
+                if (brickImage) {
+                    this.ctx.drawImage(brickImage, x, y, cellSize, cellSize);
+                }
+            }
+        }
+    }
+
+    /**
+     * 게임 오브젝트들 그리기 (볼, 패들)
+     */
+    drawGameObjects() {
+        // 볼 그리기
+        const ballImage = this.images['ball_lev1_1'];
+        if (ballImage) {
+            this.ctx.drawImage(ballImage, this.ballPosition.x, this.ballPosition.y, 150, 150);
+        }
+
+        // 패들 그리기
+        const paddleImage = this.images['hand'];
+        if (paddleImage) {
+            this.ctx.drawImage(paddleImage, this.paddlePosition.x, this.paddlePosition.y, 200, 200);
+        }
+    }
+
+    /**
+     * 푸터 그리기
+     */
+    drawFooter() {
+        const footerHeight = 120;
+        const footerY = 1024 - footerHeight;
+
+        // 푸터 배경 (반투명 흰색)
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        this.ctx.fillRect(0, footerY, 1440, footerHeight);
+
+        // 정보 박스
+        const boxWidth = 350;
+        const boxHeight = 100;
+        const boxX = 1440 - boxWidth - 20; // 오른쪽 끝에서 20px 떨어진 곳
+        const boxY = footerY + (footerHeight - boxHeight) / 2;
+
+        // 둥근 모서리 박스 그리기
+        const borderRadius = 10;
+        this.drawRoundedRect(boxX, boxY, boxWidth, boxHeight, borderRadius);
+        
+        // 박스 배경 (흰색)
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.fill();
+
+        // 박스 테두리 (녹색)
+        this.ctx.strokeStyle = '#60CD52';
+        this.ctx.lineWidth = 4;
+        this.ctx.stroke();
+
+        // 빈 컬렉션 텍스트 (임시)
+        this.ctx.fillStyle = '#aaa';
+        this.ctx.font = '18px Arial';
+        this.ctx.textAlign = 'center';
+        // this.ctx.fillText('수집한 포켓몬이 여기에 표시', boxX + boxWidth / 2, boxY + boxHeight / 2);
+    }
+
     getStyles() {
         return `
+                @import url('https://fonts.googleapis.com/css2?family=Bungee:wght@400&display=swap');
+
                 html, body {
                     height: 100%;
                     margin: 0;
@@ -96,321 +382,40 @@ class GamePage {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    overflow: hidden; /* Prevent body scrollbars */
+                    overflow: hidden;
+                    font-family: 'Bungee', cursive;
                 }
 
                 .game-page {
-                    --font-primary: 'Bungee', cursive;
-                    --color-text-main: #4F4F4F;
-                    --color-text-light: #aaa;
-                    --color-primary-green: #60CD52;
-                    --color-white: #FFFFFF;
-                    --color-white-rgb: 255, 255, 255; /* 추가된 변수 */
-                    --color-light-gray: #D9D9D9;
-                    --color-accent-yellow: #FFDE00;
-                    --color-error-red: #E53935;
-                    --color-black: #000000;
-                    --color-button-green: #4CAF50;
-                    --color-button-green-dark: #388E3C;
-                    --color-modal-bg: rgba(0, 0, 0, 0.7);
-                    --border-radius-small: 5px;
-                    --border-radius-medium: 10px;
-                    --border-radius-large: 20px;
-                    --border-radius-xl: 30px;
-
                     width: 1440px;
                     height: 1024px;
-                    overflow: hidden;
-                    font-family: var(--font-primary);
-                    position: relative; /* For absolutely positioned children */
-                }
-
-                .header-area-background {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 137px;
-                    background-color: rgba(var(--color-white-rgb), 0.6);
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    z-index: 5; /* .game-header 보다 낮게 */
-                }
-
-                .header-text-large {
-                    font-style: normal;
-                    font-weight: 400;
-                    font-size: 66px;
-                    line-height: 66px;
-                    color: var(--color-text-main);
-                }
-
-                .header-box {
-                    height: 97px;
-                    background: var(--color-white);
-                    border: 4px solid var(--color-primary-green);
-                    border-radius: var(--border-radius-large);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    position: absolute;
-                    top: 0;
-                }
-
-                .game-background {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    /* background-image는 위에서 인라인 스타일로 설정됨 */
-                    background-size: cover;
-                    background-position: center;
-                    background-repeat: no-repeat;
-                    z-index: -1;
-                }
-
-                /* 헤더 스타일 */
-                .game-header {
-                    position: relative; /* 자식 absolute 요소들의 기준점 */
-                    width: 1360px;
-                    height: 97px;
-                    padding: 0;
-                    z-index: 10; /* header-area-background 보다 높게 */
-                }
-
-                .stage-title {
-                    width: 300px; /* Figma 기준 width */
-                    height: 57px;
-                    text-align: center;
-                    position: absolute;
-                    right: calc(50% + (300px / 2) + 150px); /* SCORE 중앙 + SCORE너비/2 + 마진 = STAGE 오른쪽 끝 */
-                    top: 50%;
-                    transform: translateY(-50%);
-                }
-
-                .score-container {
-                    /* Inherits from .header-box */
-                    width: 336px; /* Figma 기준 width */
-                    position: absolute; /* 추가 */
-                    top: 0; /* 추가, .header-box와 일관성 */
-                    left: 50%;
-                    transform: translateX(-50%);
-                }
-                
-                /* .score-container .score-value styles are now covered by .header-text-large */
-
-                .timer-container {
-                    /* Inherits from .header-box */
-                    width: 200px; /* Figma 기준 width */
-                    gap: 10px;
-                    position: absolute; /* 추가 */
-                    top: 0; /* 추가, .header-box와 일관성 */
-                    left: calc(50% + (300px / 2) + 150px); /* SCORE 중앙 + SCORE너비/2 + 마진 = TIMER 왼쪽 끝 */
-                }
-
-                .timer-icon {
-                    width: 48px;
-                    height: 48px;
-                }
-
-                /* .timer-value styles are now covered by .header-text-large */
-
-                /* 메인 게임 영역 */
-                .game-main {
-                    position: absolute;
-                    top: 177px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    width: 1400px;
-                    height: 750px;
-                }
-
-                .bricks-wrapper {
-                    display: flex;
-                    justify-content: space-around;
-                    align-items: flex-start;
-                    width: 100%;
-                    height: 365px;
                     position: relative;
                 }
-                
-                .bricks-container {
-                    width: 365px;
-                    height: 365px;
-                    position: relative;
-                    display: grid;
-                    grid-template-columns: repeat(3, 1fr);
-                    grid-template-rows: repeat(3, 1fr);
-                    gap: 5px;
-                    align-items: center;
-                    justify-items: center;
-                }
 
-                .pokemon-brick {
-                    width: 90px;
-                    height: 90px;
-                    background-color: transparent; /* Default if no image */
-                    border-radius: var(--border-radius-small);
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-                
-                /* Common styles for image bricks within specific groups */
-                .bricks-group1 .pokemon-brick,
-                .bricks-group2 .pokemon-brick,
-                .bricks-group3 .pokemon-brick {
-                    background-size: cover;
-                    background-repeat: no-repeat;
-                    background-position: center;
-                    /* background-color: transparent; 이미지가 없을 경우 대비, 또는 기본 벽돌 색상 */
-                }
-
-                .pokemon-brick:hover {
-                    transform: scale(1.1);
-                    opacity: 0.8;
-                }
-
-                .pokemon-image {
-                    width: 200px;
-                    height: 200px;
-                    object-fit: contain;
+                #gameCanvas {
+                    border: 1px solid #ccc;
                     display: block;
-                }
-
-                .pokemon-image:hover {
-                    transform: scale(1.1);
-                    opacity: 0.8;
-                }
-
-                /* 게임 오브젝트들 */
-                .game-objects {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    pointer-events: none;
-                }
-
-                .pokeball {
-                    position: absolute;
-                    width: 150px;
-                    height: 150px;
-                    z-index: 5;
-                }
-
-                .pokeball img { width: 100%; height: 100%; }
-
-                .paddle {
-                    position: absolute;
-                    width: 200px;
-                    height: 200px;
-                    cursor: pointer;
-                    z-index: 5;
-                    pointer-events: auto;
-                }
-
-                .paddle img { width: 100%; height: 100%; }
-
-                /* 푸터 */
-                .game-footer {
-                    position: absolute;
-                    bottom: 0;
-                    left: 0; /* game-page의 왼쪽 끝에서 시작 */
-                    width: 100%; /* game-page의 전체 너비 (1440px) */
-                    height: 120px;
-                    background-color: rgba(255, 255, 255, 0.6); /* 흰색 배경, 60% 투명도 */
-                    display: flex;
-                    justify-content: flex-end; /* 자식 요소를 오른쪽으로 정렬 */
-                    align-items: center;     /* 자식 요소를 수직 중앙 정렬 */
-                    padding-right: 20px;     /* 오른쪽 끝에서 info-box까지의 여백 */
-                    box-sizing: border-box;  /* 패딩 계산에 포함 */
-                    z-index: 10;
-                }
-
-                .footer-info-box {
-                    width: 350px;
-                    height: 100px;
-                    background: var(--color-white); /* 불투명 흰색 배경 */
-                    border: 4px solid var(--color-primary-green);
-                    border-radius: var(--border-radius-large);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    /* padding: 10px;  내부 텍스트용 패딩, 필요시 유지 */
-                    box-sizing: border-box;
-                    /* position, bottom, right 등은 제거되거나 flex item으로 동작 */
-                }
-
-                .caught-pokemon {
-                    width: 60px;
-                    height: 60px;
-                    border-radius: var(--border-radius-small);
-                    overflow: hidden;
-                    flex-shrink: 0;
-                    background: #f0f0f0; /* Consider var(--color-light-gray) or similar */
-                }
-
-                .caught-pokemon img {
-                    width: 100%;
-                    height: 100%;
-                    object-fit: contain;
-                }
-                
-                .empty-collection {
-                    color: var(--color-text-light);
-                    font-size: 18px;
-                    text-align: center;
-                    width: 100%;
                 }
         `;
     }
 
-    renderBricks(groupIndex, stage) {
-        let brickHtml = '';
-        const totalCells = 9; // 3x3 grid
-        const middleCellIndex = 4; // 0-indexed middle cell
-        const maxBrickIndexForStage = this.brickImageCounts[stage] || 1;
-
-        // 해당 그룹 전체에 적용될 랜덤 벽돌 이미지 결정 (루프 밖에서 한 번만)
-        const chosenRandomBrickIndex = Math.floor(Math.random() * maxBrickIndexForStage) + 1;
-        const brickImageNameForThisGroup = `brick_lev${stage}_${chosenRandomBrickIndex}.png`;
-        const brickStyleForThisGroup = `background-image: url('./assets/brick/${brickImageNameForThisGroup}');`;
-
-        for (let i = 0; i < totalCells; i++) {
-            if (i === middleCellIndex) {
-                const pokemonName = `그룹 ${groupIndex} 포켓몬`;
-                const imageName = `poke_lev${stage}_${groupIndex}.png`;
-                brickHtml += `<img src="./assets/pokemon/${imageName}" alt="${pokemonName}" class="pokemon-image">`;
-            } else {
-                // 루프 밖에서 결정된 동일한 스타일을 모든 벽돌에 적용
-                brickHtml += `<div class="pokemon-brick" style="${brickStyleForThisGroup}" data-pokemon="group${groupIndex}_brick_${i}" data-level="1"></div>`;
-            }
-        }
-        return brickHtml;
-    }
-
-    /**
-     * 수집한 포켓몬 렌더링 (초기 빈 상태 표시)
-     */
-    renderCaughtPokemon() {
-        return '<div class="empty-collection"></div>';
-    }
-
-    mount(container) {
+    async mount(container) {
         this.container = container;
         this.container.innerHTML = this.render();
         
-        // 스타일 처리: getStyles() 메서드에서 스타일 내용을 가져와 head에 추가
+        // 스타일 처리
         this.styleElement = document.createElement('style');
         this.styleElement.textContent = this.getStyles();
         document.head.appendChild(this.styleElement);
         
+        // Canvas 초기화
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        
+        // 이미지 로딩 후 벽돌 그룹 초기화 및 디자인 그리기
+        await this.loadImages();
+        this.initializeBrickGroups();
+        this.drawDesign();
     }
 
     unmount() {
@@ -421,6 +426,11 @@ class GamePage {
             this.container.innerHTML = '';
         }
         this.container = null;
+        this.canvas = null;
+        this.ctx = null;
         this.styleElement = null;
+        this.images = {};
+        this.imagesLoaded = false;
+        this.brickGroups = [];
     }
 } 
