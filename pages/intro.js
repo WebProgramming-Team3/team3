@@ -322,3 +322,6 @@ class IntroPage {
         this.startAutoSlide();
     }
 } 
+
+
+// test changes
