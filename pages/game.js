@@ -10,7 +10,7 @@ class GamePage {
         this.container = null;
         this.canvas = null;
         this.context = null;
-        this.currentStage = 2; // 현재 스테이지
+        this.currentStage = 3; // 현재 스테이지
         this.brickImageCounts = { 1: 2, 2: 5, 3: 5 }; // 스테이지별 벽돌 이미지 개수
         this.paddle = {
             width: 120,
@@ -134,7 +134,10 @@ class GamePage {
             // 3x3 그리드의 벽돌 상태 초기화 (디자인용 - 모두 표시)
             for (let i = 0; i < 9; i++) {
                 brickGroup.brickGroups.push({
-                    isPokemon: i === 4 // 중앙(인덱스 4)이 포켓몬
+                    isPokemon: i === 4, // 중앙(인덱스 4)이 포켓몬
+                    health: this.currentStage,         // Stage1 → 1, Stage2 → 2, Stage3 → 3
+                    maxHealth: this.currentStage,
+                    opacity: 1
                 });
             }
 
@@ -337,6 +340,12 @@ class GamePage {
             const x = position.x + col * (cellSize + gap);
             const y = position.y + row * (cellSize + gap);
 
+            // 벽돌 좌표 정보
+            brick.x = x;
+            brick.y = y;
+            brick.width = brick.isPokemon ? 200 : cellSize;
+            brick.height = brick.isPokemon ? 200 : cellSize;
+
             if (brick.isPokemon) {
                 // 중앙에 포켓몬 이미지
                 if (pokemonImage) {
@@ -345,7 +354,17 @@ class GamePage {
             } else {
                 // 벽돌 그리기
                 if (brickImage) {
+                    this.context.save();
+                    this.context.globalAlpha = brick.opacity;
                     this.context.drawImage(brickImage, x, y, cellSize, cellSize);
+
+                    // 디버깅용
+                    // this.context.globalAlpha = 1;
+                    // this.context.strokeStyle = '#4F4F4F';
+                    // this.context.lineWidth = 2;
+                    // this.context.strokeRect(x, y, cellSize, cellSize);
+
+                    this.context.restore();
                 }
             }
         }
@@ -382,9 +401,16 @@ class GamePage {
         this.ball.x += this.ball.dx;
         this.ball.y += this.ball.dy;
 
-        if (this.ball.x + this.ball.radius > this.canvas.width || 
-            this.ball.x - this.ball.radius < 0) {
-            this.ball.dx = -this.ball.dx;
+        // 왼쪽 벽
+        if (this.ball.x - this.ball.radius <= 0) {
+            this.ball.x = this.ball.radius; // 튕기고 벽 밖으로 안 나가게
+            this.ball.dx = Math.abs(this.ball.dx);
+        }
+
+        // 오른쪽 벽
+        if (this.ball.x + this.ball.radius >= this.canvas.width) {
+            this.ball.x = this.canvas.width - this.ball.radius;
+            this.ball.dx = -Math.abs(this.ball.dx);
         }
 
         // 바닥에 닿으면 게임 오버 처리
@@ -415,9 +441,38 @@ class GamePage {
             this.ball.dy = Math.abs(this.ball.dy); // 아래로 튕기기
         }
 
-        // TODO : 벽돌 충돌 체크
+        // 벽돌 충돌 체크
+        this.brickGroups.forEach(group => {
+            group.brickGroups.forEach(brick => {
+                if (brick.opacity <= 0) return;
+        
+                if (
+                    this.isCircleRectColliding(this.ball, brick)
+                ) {
+                    // 충돌 처리
+                    this.ball.dy = -this.ball.dy;
+                    brick.health -= this.ball.power;
+                    brick.opacity = Math.max(0, brick.health / brick.maxHealth);
+        
+                    if (brick.health <= 0) {
+                        this.score += 10 * this.ball.level;
+                        // this.playBreakSound?.();
+                    }
+                }
+            });
+        });
 
         // TODO: 포켓몬 충돌 체크
+    }
+
+    isCircleRectColliding(circle, rect) {
+        const closestX = Math.max(rect.x, Math.min(circle.x, rect.x + rect.width));
+        const closestY = Math.max(rect.y, Math.min(circle.y, rect.y + rect.height));
+    
+        const dx = circle.x - closestX;
+        const dy = circle.y - closestY;
+    
+        return (dx * dx + dy * dy) <= (circle.radius * circle.radius);
     }
 
     endGame(status = 'lose') {
