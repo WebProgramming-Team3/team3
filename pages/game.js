@@ -9,7 +9,7 @@ class GamePage {
         this.container = null;
         this.canvas = null;
         this.context = null;
-        this.currentStage = 3; // 현재 스테이지
+        this.currentStage = 1; // 현재 스테이지
         this.brickImageCounts = { 1: 2, 2: 5, 3: 5 }; // 스테이지별 벽돌 이미지 개수
         this.paddle = {
             width: 120,
@@ -20,8 +20,8 @@ class GamePage {
         this.ball = {
             x: this.paddle.x + this.paddle.width / 2,
             y: this.paddle.y - 25,
-            dx: 4,
-            dy: -4,
+            dx: 2,
+            dy: -2,
             radius: 25,
             level: 1,
             power: 1  // 초기 데미지
@@ -30,13 +30,18 @@ class GamePage {
         this.images = {}; // 이미지 캐시
         this.imagesLoaded = false;
         this.brickGroups = []; // 벽돌 그룹 정보 저장
-        this.timeLeft = 5; // 게임 시작 시 남은 시간 (초)
+        this.timeLeft = 60; // 게임 시작 시 남은 시간 (초)
         this.lastTime = null; // 이전 프레임 시간 저장용
         this.isGameOver = false;
         this.isGameOverHandled = false;
         this.gameResult = null; // 'win' or 'lose'
         this.pokemons = [];
         this.collectedPokemons = []; // 수집된 포켓몬 배열 추가
+        
+        // 스크롤 관련 속성
+        this.scrollX = 0;
+        this.scrollSpeed = 0.3; // 스크롤 속도 감소
+        this.totalGroups = 15; // 그룹 수 (5세트)
     }
 
     /**
@@ -120,26 +125,27 @@ class GamePage {
      */
     initializeBrickGroups() {
         this.brickGroups = [];
+        this.scrollX = 0;
         
-        for (let groupIndex = 1; groupIndex <= 3; groupIndex++) {
+        for (let groupIndex = 1; groupIndex <= this.totalGroups; groupIndex++) {
             const maxBrickIndexForStage = this.brickImageCounts[this.currentStage] || 1;
             const chosenRandomBrickIndex = Math.floor(Math.random() * maxBrickIndexForStage) + 1;
             
             const brickGroup = {
                 groupIndex: groupIndex,
                 brickImageKey: `brick_lev${this.currentStage}_${chosenRandomBrickIndex}`,
-                pokemonImageKey: `poke_lev${this.currentStage}_${groupIndex}`,
-                brickGroups: [] // 개별 벽돌 상태 (파괴되었는지 등)
+                pokemonImageKey: `poke_lev${this.currentStage}_${((groupIndex - 1) % 3) + 1}`,
+                brickGroups: []
             };
 
-            // 3x3 그리드의 벽돌 상태 초기화 (디자인용 - 모두 표시)
-            const stageHealth = this.currentStage === 3 ? 4 : this.currentStage; // 스테이지 3은 체력 4
+            const stageHealth = this.currentStage === 3 ? 4 : this.currentStage;
             for (let i = 0; i < 9; i++) {
                 brickGroup.brickGroups.push({
-                    isPokemon: i === 4, // 중앙(인덱스 4)이 포켓몬
+                    isPokemon: i === 4,
                     health: stageHealth,
                     maxHealth: stageHealth,
-                    opacity: 1
+                    opacity: 1,
+                    caught: false
                 });
             }
 
@@ -306,19 +312,20 @@ class GamePage {
         const startY = 177;
         const groupWidth = 365;
         const groupHeight = 365;
-        const spacing = (1350 - groupWidth * 3) / 2; // 그룹 간 간격
+        const spacing = 50; // 그룹 간 간격 축소
         
-        // 3개 그룹 위치 계산
-        const groupPositions = [
-            { x: spacing / 2, y: startY }, // 첫 번째 그룹
-            { x: spacing / 2 + groupWidth + spacing, y: startY }, // 두 번째 그룹
-            { x: spacing / 2 + (groupWidth + spacing) * 2, y: startY } // 세 번째 그룹
-        ];
+        this.brickGroups.forEach((group, index) => {
+            const baseX = index * (groupWidth + spacing) - this.scrollX; // 스크롤도 계산해야함
+            
+            // 화면 밖의 그룹은 렌더링 X
+            if (baseX < -groupWidth || baseX > this.canvasWidth) return;
+            
+            this.drawBrickGroup(group, { x: baseX, y: startY });
+        });
 
-        for (let groupIndex = 0; groupIndex < 3; groupIndex++) {
-            if (this.brickGroups[groupIndex]) {
-                this.drawBrickGroup(this.brickGroups[groupIndex], groupPositions[groupIndex]);
-            }
+        // 스크롤 갱신
+        if (!this.isGameOver) {
+            this.scrollX += this.scrollSpeed;
         }
     }
 
@@ -342,11 +349,11 @@ class GamePage {
             const x = position.x + col * (cellSize + gap);
             const y = position.y + row * (cellSize + gap);
 
-            // 벽돌 좌표 정보
+            // 벽돌 좌표 정보 업데이트
             brick.x = x;
             brick.y = y;
-            brick.width = cellSize;  // 모든 요소의 크기를 동일하게
-            brick.height = cellSize; // 모든 요소의 크기를 동일하게
+            brick.width = cellSize;
+            brick.height = cellSize;
 
             if (brick.isPokemon) {
                 // 중앙에 포켓몬 이미지 (포획되지 않은 경우에만 표시)
@@ -427,65 +434,95 @@ class GamePage {
             
             const paddleCenter = this.paddle.x + this.paddle.width/2;
             const hitPoint = (this.ball.x - paddleCenter) / (this.paddle.width/2);
-            this.ball.dx = hitPoint * 8;
+            this.ball.dx = hitPoint * 5; // 패들 충돌 시 x축 속도 조절
         }
 
         // 헤더 충돌 체크
-        if (
-            this.ball.y - this.ball.radius <= this.headerHeight &&
-            this.ball.dy < 0 // 위로 올라가는 중일 때만
-        ) {
-            this.ball.dy = Math.abs(this.ball.dy); // 아래로 튕기기
+        if (this.ball.y - this.ball.radius <= this.headerHeight &&
+            this.ball.dy < 0) {
+            this.ball.dy = Math.abs(this.ball.dy);
         }
 
-        // 벽돌 충돌 체크
-        this.brickGroups.forEach(group => {
-            group.brickGroups.forEach(brick => {
-                // 이미 부서진 벽돌이나 포획된 포켓몬은 충돌 체크하지 않음
-                if (brick.opacity <= 0 || (brick.isPokemon && brick.caught)) return;
+        // 벽돌 및 포켓몬 충돌 체크
+        let collisionFound = false;
         
+        for (const group of this.brickGroups) {
+            if (collisionFound) break;
+
+            const baseX = group.groupIndex * (365 + 50) - this.scrollX;
+            
+            // 화면 범위를 약간 넓게 잡아서 체크 (-500 ~ canvasWidth + 500) -> 이거 안하면 막 튀어나오고 있는 벽돌에 충돌이 안됨
+            if (baseX < -500 || baseX > this.canvasWidth + 500) continue;
+
+            for (const brick of group.brickGroups) {
+                // 이미 부서진 벽돌이나 포획된 포켓몬은 무시
+                if (brick.opacity <= 0 || (brick.isPokemon && brick.caught)) continue;
+
+                // 충돌 체크
                 if (this.isCircleRectColliding(this.ball, brick)) {
-                    // 충돌 처리
-                    this.ball.dy = -this.ball.dy;
-                    if (!brick.isPokemon) {
+                    collisionFound = true;
+
+                    // 충돌 방향 계산
+                    const ballCenterX = this.ball.x;
+                    const ballCenterY = this.ball.y;
+                    const brickCenterX = brick.x + brick.width / 2;
+                    const brickCenterY = brick.y + brick.height / 2;
+
+                    // 충돌 지점과 벽돌 중심 사이의 각도
+                    const angle = Math.atan2(ballCenterY - brickCenterY, ballCenterX - brickCenterX);
+                    const PI = Math.PI;
+
+                    // 각도에 따른 반사 방향 결정
+                    if (angle > -PI/4 && angle < PI/4) {
+                        // 오른쪽에서 충돌
+                        this.ball.dx = Math.abs(this.ball.dx);
+                    } else if (angle > PI/4 && angle < 3*PI/4) {
+                        // 아래에서 충돌
+                        this.ball.dy = Math.abs(this.ball.dy);
+                    } else if (angle > -3*PI/4 && angle < -PI/4) {
+                        // 위에서 충돌
+                        this.ball.dy = -Math.abs(this.ball.dy);
+                    } else {
+                        // 왼쪽에서 충돌
+                        this.ball.dx = -Math.abs(this.ball.dx);
+                    }
+
+                    if (brick.isPokemon) {
+                        // 포켓몬 포획 처리
+                        brick.caught = true;
+                        const pokemonLevel = parseInt(group.pokemonImageKey.split('_')[1].substring(3));
+                        this.score += pokemonLevel;
+                        this.updateBallLevel();
+                        
+                        this.collectedPokemons.push({
+                            imageKey: group.pokemonImageKey,
+                            stage: this.currentStage,
+                            groupIndex: group.groupIndex
+                        });
+                    } else {
+                        // 일반 벽돌 데미지 처리
                         brick.health -= this.ball.power;
                         brick.opacity = Math.max(0, brick.health / brick.maxHealth);
                     }
-                }
-            });
-        });
-
-        // 포켓몬 충돌 체크
-        this.brickGroups.forEach(group => {
-            const pokemon = group.brickGroups[4]; // 중앙(인덱스 4)이 포켓몬
-            if (pokemon.isPokemon && !pokemon.caught) {
-                if (this.isCircleRectColliding(this.ball, pokemon)) {
-                    pokemon.caught = true;
                     
-                    // 포켓몬 레벨에 따른 점수 부여
-                    const pokemonLevel = parseInt(group.pokemonImageKey.split('_')[1].substring(3));
-                    this.score += pokemonLevel;
-                    this.updateBallLevel(); // 점수가 올랐을 때만 볼 레벨 업데이트
-                    
-                    // 수집된 포켓몬 목록에 추가
-                    this.collectedPokemons.push({
-                        imageKey: group.pokemonImageKey,
-                        stage: this.currentStage,
-                        groupIndex: group.groupIndex
-                    });
+                    break;
                 }
             }
-        });
+        }
     }
 
     isCircleRectColliding(circle, rect) {
+        // 원의 중심과 사각형의 가장 가까운 점 찾기
         const closestX = Math.max(rect.x, Math.min(circle.x, rect.x + rect.width));
         const closestY = Math.max(rect.y, Math.min(circle.y, rect.y + rect.height));
     
-        const dx = circle.x - closestX;
-        const dy = circle.y - closestY;
+        // 원의 중심과 가장 가까운 점 사이의 거리 계산
+        const distanceX = circle.x - closestX;
+        const distanceY = circle.y - closestY;
+        const distanceSquared = (distanceX * distanceX) + (distanceY * distanceY);
     
-        return (dx * dx + dy * dy) <= (circle.radius * circle.radius);
+        // 거리가 원의 반지름보다 작거나 같으면 충돌
+        return distanceSquared <= (circle.radius * circle.radius);
     }
 
     endGame(status) {
@@ -562,6 +599,7 @@ class GamePage {
                     if (this.currentStage < 3) {
                         // 다음 스테이지로 이동
                         this.currentStage++;
+                        this.collectedPokemons = []; // 스테이지 변경 시 포켓몬 컬렉션 초기화
                         this.resetGame();
                     } else {
                         // 메인화면으로 이동
@@ -571,6 +609,7 @@ class GamePage {
                     }
                 } else {
                     // 패배했을 때는 현재 스테이지 재시작
+                    this.collectedPokemons = []; // 재시작 시 포켓몬 컬렉션 초기화
                     this.resetGame();
                 }
             }
@@ -580,34 +619,31 @@ class GamePage {
     }
 
     resetGame() {
-        // 기본 상태 초기화
         this.score = 0;
         this.timeLeft = 60;
         this.isGameOver = false;
         this.isGameOverHandled = false;
         this.gameResult = null;
     
-        // 패들 위치 초기화
         this.paddle.x = (this.canvasWidth - this.paddle.width) / 2;
         this.paddle.y = this.canvasHeight - this.footerHeight - this.paddle.height;
     
-        // 공 위치 및 속도 초기화
         this.ball.x = this.paddle.x + this.paddle.width / 2;
         this.ball.y = this.paddle.y - this.ball.radius;
-        this.ball.dx = 4;
-        this.ball.dy = -4;
+        this.ball.dx = 2;
+        this.ball.dy = -2;
         this.ball.level = 1;
-        this.ball.power = 1; // 볼 파워 초기화
+        this.ball.power = 1;
     
-        // 포켓몬 포획 정보 초기화
-        if (Array.isArray(this.pokemons)) {
-            this.pokemons.forEach(p => p.caught = false);
-        }
+        // 포켓몬 컬렉션 초기화
+        this.collectedPokemons = [];
+        
+        // 스크롤 위치 초기화
+        this.scrollX = 0;
     
         // 벽돌 그룹 초기화
         this.initializeBrickGroups();
     
-        // 게임 루프 재시작
         this.startGameLoop();
         this.startTimer();
     }
