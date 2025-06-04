@@ -107,7 +107,7 @@ class SettingsPage {
                 .options-container {
                     display: flex; flex-direction: column; align-items: center;
                     width: 1000px; /* Figma 기준 options-container 너비 */
-                    gap: 50px; /* 옵션 아이템 간 간격 */
+                    gap: 150px; /* 옵션 아이템 간 간격 */
                 }
                 .option-item {
                     display: flex; justify-content: space-between; align-items: center;
@@ -250,7 +250,12 @@ class SettingsPage {
             SettingsPage.currentBackgroundSetting = value; // 정적 속성 업데이트
         } else if (type === 'sounds') {
             this.soundsOption = value;
-            localStorage.setItem(this.CONSTANTS.SOUNDS_OPTION_KEY, value);
+            
+            // 사운드 매니저에 설정 적용 
+            if (window.soundManager) {
+                const isEnabled = value === this.CONSTANTS.OPTION_ON;
+                window.soundManager.setEnabled(isEnabled);
+            }
         }
         this.updateUI();
     }
@@ -275,11 +280,18 @@ class SettingsPage {
         if(this.soundsOffButton) this.soundsOffButton.classList.toggle('active', this.soundsOption === this.CONSTANTS.OPTION_OFF);
     }
 
-    // 저장된 설정 불러오기
+    // 현재 세션 설정 불러오기
     loadSettings() {
-        // 배경 설정은 localStorage에서 불러오지 않고, 현재 세션의 정적 속성 값을 사용
+        // 배경 설정은 현재 세션의 정적 속성 값을 사용
         this.backgroundOption = SettingsPage.currentBackgroundSetting;
-        this.soundsOption = localStorage.getItem(this.CONSTANTS.SOUNDS_OPTION_KEY) || this.CONSTANTS.OPTION_ON;
+        
+        // 사운드 설정은 사운드 매니저의 현재 상태를 사용
+        if (window.getGameSoundsEnabled) {
+            this.soundsOption = window.getGameSoundsEnabled() ? this.CONSTANTS.OPTION_ON : this.CONSTANTS.OPTION_OFF;
+        } else {
+            // 사운드 매니저가 아직 로드되지 않은 경우 기본값 사용
+            this.soundsOption = this.CONSTANTS.OPTION_ON;
+        }
     }
 
     // --- 정적 메서드 추가 ---
