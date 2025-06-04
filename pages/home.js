@@ -1,4 +1,3 @@
-
 class HomePage {
     constructor() {
         this.container = null;
@@ -19,7 +18,7 @@ class HomePage {
             { id: 'play-game-button', text: 'play game', route: 'game' },
             { id: 'how-to-play-button', text: 'HOW TO PLAY', route: 'howtoplay' },
             { id: 'setting-button', text: 'setting', route: 'settings' },
-            { id: 'ranking-button', text: 'Ranking', route: 'game' }
+            { id: 'ranking-button', text: 'Ranking', route: 'ranking' }
         ];
     }
 

@@ -1,4 +1,3 @@
-
 class Router {
     constructor() {
         this.routes = {};
@@ -19,6 +18,7 @@ class Router {
         this.addRoute('game', GamePage);
         this.addRoute('settings', SettingsPage);
         this.addRoute('howtoplay', HowToPlayPage);
+        this.addRoute('ranking', RankingPage);
 
         // 브라우저 뒤로가기/앞으로가기 처리
         window.addEventListener('popstate', (event) => {
