@@ -31,7 +31,7 @@ class HomePage {
                 <div class="home-container">
                     <div class="home-background"></div>
                     <div class="home-title">
-                        <h1>GAME NAME?</h1> 
+                        <h1>Poke Bricks</h1> 
                     </div>
                     <div class="main-button-container">
                         ${this.BUTTONS.map(button => 
