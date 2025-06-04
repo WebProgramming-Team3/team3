@@ -416,6 +416,8 @@ class GamePage {
         await this.loadImages();
         this.initializeBrickGroups();
         this.drawDesign();
+        //마우스 움직임 감지
+        this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
     }
 
     unmount() {
@@ -432,5 +434,20 @@ class GamePage {
         this.images = {};
         this.imagesLoaded = false;
         this.brickGroups = [];
+        //이미지 누수 방지
+        this.canvas.removeEventListener('mousemove', this.handleMouseMove.bind(this));
     }
+
+    //공 움직임 여부
+    handleMouseMove(event) {
+    console.log("마우스");
+    const rect = this.canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+
+    // 손 이미지 중심으로 맞추기 (중앙 정렬)
+    this.paddlePosition.x = mouseX - 100; // 손 이미지 width 200 기준으로 -100
+
+    // 다시 그리기
+    this.drawDesign();
+    };
 } 
