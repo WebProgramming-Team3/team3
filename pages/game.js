@@ -12,6 +12,8 @@ class GamePage {
         this.images = {}; // 이미지 캐시
         this.imagesLoaded = false;
         this.brickGroups = []; // 벽돌 그룹 정보 저장
+        this.timeLeft = 60; // 게임 시작 시 남은 시간 (초)
+        this.lastTime = null; // 이전 프레임 시간 저장용
     }
 
     /**
@@ -160,8 +162,6 @@ class GamePage {
      * 헤더 영역 그리기
      */
     drawHeader() {
-        const staticTimeLeft = 60;
-
         // 헤더 배경 (반투명 흰색)
         this.ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
         this.ctx.fillRect(0, 0, 1440, 137);
@@ -181,7 +181,7 @@ class GamePage {
 
         // TIMER 박스 그리기
         const timerX = 720 + 168 + 300; // 중앙에서 오른쪽으로 이동
-        this.drawTimerBox(timerX, 68, 200, 97, staticTimeLeft);
+        this.drawTimerBox(timerX, 68, 200, 97, this.timeLeft);
     }
 
     /**
@@ -399,6 +399,39 @@ class GamePage {
         `;
     }
 
+    startTimer() {
+        this.timerIntervalId = setInterval(() => {
+            this.timeLeft -= 1;
+            if (this.timeLeft <= 0) {
+                this.timeLeft = 0;
+                this.stopTimer();
+                this.onTimeOver?.();
+            }
+            this.drawDesign();
+        }, 1000);
+    }
+
+    stopTimer() {
+        if (this.timerIntervalId) {
+            clearInterval(this.timerIntervalId);
+            this.timerIntervalId = null;
+        }
+    }
+
+    startGameLoop() {
+        const loop = () => {
+            this.drawDesign();
+            this.animationFrameId = requestAnimationFrame(loop);
+        };
+        this.animationFrameId = requestAnimationFrame(loop);
+    }
+    
+    stopGameLoop() {
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+        }
+    }
+
     async mount(container) {
         this.container = container;
         this.container.innerHTML = this.render();
@@ -415,10 +448,14 @@ class GamePage {
         // 이미지 로딩 후 벽돌 그룹 초기화 및 디자인 그리기
         await this.loadImages();
         this.initializeBrickGroups();
-        this.drawDesign();
+        this.startGameLoop();
+        this.startTimer();
     }
 
     unmount() {
+        this.stopGameLoop(); 
+        this.stopTimer();
+
         if (this.styleElement && document.head.contains(this.styleElement)) {
             document.head.removeChild(this.styleElement);
         }
