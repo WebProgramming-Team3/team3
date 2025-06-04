@@ -1,25 +1,31 @@
 
 class GamePage {
     constructor() {
+        // 캔버스 크기 및 레이아웃 설정
+        this.canvasWidth = 1440;
+        this.canvasHeight = 1024;
+        this.headerHeight = 137;
+        this.footerHeight = 120;
+
         this.container = null;
         this.canvas = null;
         this.context = null;
         this.currentStage = 2; // 현재 스테이지
         this.brickImageCounts = { 1: 2, 2: 5, 3: 5 }; // 스테이지별 벽돌 이미지 개수
+        this.paddle = {
+            width: 120,
+            height: 120,
+            x: (this.canvasWidth - 120) / 2, // 가로 중앙 정렬
+            y: this.canvasHeight - this.footerHeight - 120 // 하단 footer 위
+        };
         this.ball = {
-            x: 720,
-            y: 590,
-            dx: 2,
-            dy: -2,
+            x: this.paddle.x + this.paddle.width / 2,
+            y: this.paddle.y - 25,
+            dx: 4,
+            dy: -4,
             radius: 25,
             level: 1,
             power: 1
-        };
-        this.paddle = {
-            width: 200,
-            height: 200,
-            x: 720,
-            y: 600
         };
         this.score = 0; // 점수 
         this.images = {}; // 이미지 캐시
@@ -27,6 +33,8 @@ class GamePage {
         this.brickGroups = []; // 벽돌 그룹 정보 저장
         this.timeLeft = 60; // 게임 시작 시 남은 시간 (초)
         this.lastTime = null; // 이전 프레임 시간 저장용
+        this.isGameOver = false;
+        this.gameResult = null; // 'win' or 'lose'
     }
 
     /**
@@ -41,6 +49,8 @@ class GamePage {
             // 유틸리티
             'timer': './assets/utils/timer.png',
             'hand': './assets/utils/hand.png',
+            'lose': './assets/utils/lose.png',
+            'win': './assets/utils/win.png',
             
             // 볼
             'ball_lev1_1': './assets/ball/ball_lev1_1.png',
@@ -98,7 +108,7 @@ class GamePage {
     render() {
         return `
             <div class="game-page">
-                <canvas id="gameCanvas" width="1440" height="1024"></canvas>
+                <canvas id="gameCanvas" width="${this.canvasWidth}" height="${this.canvasHeight}"></canvas>
             </div>
         `;
     }
@@ -148,7 +158,7 @@ class GamePage {
         if (!this.context || !this.imagesLoaded) return;
 
         // 캔버스 초기화
-        this.context.clearRect(0, 0, 1440, 1024);
+        this.context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 
         // 배경 그리기
         this.drawBackground();
@@ -177,7 +187,7 @@ class GamePage {
         const backgroundImage = this.images[backgroundKey];
         
         if (backgroundImage) {
-            this.context.drawImage(backgroundImage, 0, 0, 1440, 1024);
+            this.context.drawImage(backgroundImage, 0, 0, this.canvasWidth, this.canvasHeight);
         }
     }
 
@@ -187,7 +197,7 @@ class GamePage {
     drawHeader() {
         // 헤더 배경 (반투명 흰색)
         this.context.fillStyle = 'rgba(255, 255, 255, 0.6)';
-        this.context.fillRect(0, 0, 1440, 137);
+        this.context.fillRect(0, 0, this.canvasWidth, this.headerHeight);
 
         // 폰트 설정
         this.context.font = "66px 'Bungee', cursive";
@@ -361,6 +371,10 @@ class GamePage {
             this.context.drawImage(handImage, this.paddle.x, this.paddle.y, 
                 this.paddle.width, this.paddle.height);
         }
+
+        this.context.strokeStyle = '#60CD52'; // 경계선
+        this.context.lineWidth = 2;
+        this.context.strokeRect(this.paddle.x, this.paddle.y, this.paddle.width, this.paddle.height);
     }
 
     moveBall() {
@@ -372,9 +386,11 @@ class GamePage {
             this.ball.dx = -this.ball.dx;
         }
 
-        // TODO : 바닥에 닿으면 게임 오버 처리
-        if (this.ball.y + this.ball.radius > this.canvas.height) {
-            // this.isGameOver = true;
+        // 바닥에 닿으면 게임 오버 처리
+        const gameBottomY = this.canvas.height - this.footerHeight;
+        if (this.ball.y + this.ball.radius > gameBottomY) {
+            this.isGameOver = true;
+            this.gameResult = 'lose';
         }
     }
 
@@ -391,9 +407,8 @@ class GamePage {
         }
 
         // 헤더 충돌 체크
-        const headerHeight = 137;
         if (
-            this.ball.y - this.ball.radius <= headerHeight &&
+            this.ball.y - this.ball.radius <= this.headerHeight &&
             this.ball.dy < 0 // 위로 올라가는 중일 때만
         ) {
             this.ball.dy = Math.abs(this.ball.dy); // 아래로 튕기기
@@ -404,22 +419,76 @@ class GamePage {
         // TODO: 포켓몬 충돌 체크
     }
 
+    endGame(status = 'lose') {
+        this.stopGameLoop();
+        this.stopTimer();
+        this.gameResult = status;
+    
+        // 캔버스 전체 덮기
+        this.context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    
+        // 중앙 이미지 출력 (lose or win)
+        const resultImageKey = status === 'win' ? 'win' : 'lose';
+        const resultImage = this.images[resultImageKey];
+        if (resultImage) {
+            const imgWidth = 753;
+            const imgHeight = 360;
+            const imgX = (this.canvas.width - imgWidth) / 2;
+            const imgY = (this.canvas.height - imgHeight) / 2 - 100;
+            this.context.drawImage(resultImage, imgX, imgY, imgWidth, imgHeight);
+        }
+    
+        // 텍스트
+        this.context.font = '24px Bungee, cursive';
+        this.context.fillStyle = 'white';
+        this.context.textAlign = 'center';
+        this.context.fillText(`최종 점수: ${this.score}`, this.canvas.width/2, this.canvas.height/2 + 100);
+    
+        const caught = Array.isArray(this.pokemons) ? this.pokemons.filter(p => p.caught).length : 0;
+        this.context.fillText(`포획한 포켓몬: ${caught}마리`, this.canvas.width/2, this.canvas.height/2 + 140);
+    
+        // 재시작 버튼
+        const buttonWidth = 200;
+        const buttonHeight = 50;
+        const buttonX = this.canvas.width/2 - buttonWidth/2;
+        const buttonY = this.canvas.height/2 + 200;
+    
+        this.context.fillStyle = '#60CD52';
+        this.context.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
+    
+        this.context.fillStyle = 'white';
+        this.context.fillText('다시 시작', this.canvas.width/2, buttonY + 25);
+    
+        // 게임 재시작 버튼 이벤트
+        this.canvas.addEventListener('click', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+    
+            if (clickX > buttonX && clickX < buttonX + buttonWidth &&
+                clickY > buttonY && clickY < buttonY + buttonHeight) {
+                this.resetGame();
+            }
+        });
+    }
+
+
     /**
      * 푸터 그리기
      */
     drawFooter() {
-        const footerHeight = 120;
-        const footerY = 1024 - footerHeight;
+        const footerY = this.canvasHeight - this.footerHeight;
 
         // 푸터 배경 (반투명 흰색)
         this.context.fillStyle = 'rgba(255, 255, 255, 0.6)';
-        this.context.fillRect(0, footerY, 1440, footerHeight);
+        this.context.fillRect(0, footerY, this.canvasWidth, this.footerHeight);
 
         // 정보 박스
         const boxWidth = 350;
         const boxHeight = 100;
-        const boxX = 1440 - boxWidth - 20; // 오른쪽 끝에서 20px 떨어진 곳
-        const boxY = footerY + (footerHeight - boxHeight) / 2;
+        const boxX = this.canvasWidth - boxWidth - 20; // 오른쪽 끝에서 20px 떨어진 곳
+        const boxY = footerY + (this.footerHeight - boxHeight) / 2;
 
         // 둥근 모서리 박스 그리기
         const borderRadius = 10;
@@ -457,8 +526,8 @@ class GamePage {
                 }
 
                 .game-page {
-                    width: 1440px;
-                    height: 1024px;
+                    width: ${this.canvasWidth}px;
+                    height: ${this.canvasHeight}px;
                     position: relative;
                 }
 
@@ -490,6 +559,12 @@ class GamePage {
 
     startGameLoop() {
         const loop = () => {
+            if (this.isGameOver) {
+                this.stopGameLoop();
+                this.endGame();
+                return;
+            }
+
             this.drawDesign();
             this.moveBall();
             this.checkCollisions();
