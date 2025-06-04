@@ -3,11 +3,24 @@ class GamePage {
     constructor() {
         this.container = null;
         this.canvas = null;
-        this.ctx = null;
+        this.context = null;
         this.currentStage = 2; // 현재 스테이지
         this.brickImageCounts = { 1: 2, 2: 5, 3: 5 }; // 스테이지별 벽돌 이미지 개수
-        this.ballPosition = { x: 720, y: 590 }; // 볼 위치 
-        this.paddlePosition = { x: 720, y: 600 }; // 패들 위치 
+        this.ball = {
+            x: 720,
+            y: 590,
+            dx: 2,
+            dy: -2,
+            radius: 25,
+            level: 1,
+            power: 1
+        };
+        this.paddle = {
+            width: 200,
+            height: 200,
+            x: 720,
+            y: 600
+        };
         this.score = 0; // 점수 
         this.images = {}; // 이미지 캐시
         this.imagesLoaded = false;
@@ -104,12 +117,12 @@ class GamePage {
                 groupIndex: groupIndex,
                 brickImageKey: `brick_lev${this.currentStage}_${chosenRandomBrickIndex}`,
                 pokemonImageKey: `poke_lev${this.currentStage}_${groupIndex}`,
-                bricks: [] // 개별 벽돌 상태 (파괴되었는지 등)
+                brickGroups: [] // 개별 벽돌 상태 (파괴되었는지 등)
             };
 
             // 3x3 그리드의 벽돌 상태 초기화 (디자인용 - 모두 표시)
             for (let i = 0; i < 9; i++) {
-                brickGroup.bricks.push({
+                brickGroup.brickGroups.push({
                     isPokemon: i === 4 // 중앙(인덱스 4)이 포켓몬
                 });
             }
@@ -118,14 +131,24 @@ class GamePage {
         }
     }
 
+    addEventListeners() {
+        this.canvas.addEventListener('mousemove', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            
+            this.paddle.x = Math.max(0, Math.min(mouseX - this.paddle.width/2, 
+                this.canvas.width - this.paddle.width));
+        });
+    }
+
     /**
      * Canvas에 디자인 그리기 (정적)
      */
     drawDesign() {
-        if (!this.ctx || !this.imagesLoaded) return;
+        if (!this.context || !this.imagesLoaded) return;
 
         // 캔버스 초기화
-        this.ctx.clearRect(0, 0, 1440, 1024);
+        this.context.clearRect(0, 0, 1440, 1024);
 
         // 배경 그리기
         this.drawBackground();
@@ -134,7 +157,7 @@ class GamePage {
         this.drawHeader();
 
         // 벽돌들 그리기
-        this.drawBricks();
+        this.drawbrickGroups();
 
         // 게임 오브젝트들 그리기
         this.drawGameObjects();
@@ -154,7 +177,7 @@ class GamePage {
         const backgroundImage = this.images[backgroundKey];
         
         if (backgroundImage) {
-            this.ctx.drawImage(backgroundImage, 0, 0, 1440, 1024);
+            this.context.drawImage(backgroundImage, 0, 0, 1440, 1024);
         }
     }
 
@@ -163,18 +186,18 @@ class GamePage {
      */
     drawHeader() {
         // 헤더 배경 (반투명 흰색)
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-        this.ctx.fillRect(0, 0, 1440, 137);
+        this.context.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        this.context.fillRect(0, 0, 1440, 137);
 
         // 폰트 설정
-        this.ctx.font = "66px 'Bungee', cursive";
-        this.ctx.fillStyle = '#4F4F4F';
-        this.ctx.textAlign = 'center';
-        this.ctx.textBaseline = 'middle';
+        this.context.font = "66px 'Bungee', cursive";
+        this.context.fillStyle = '#4F4F4F';
+        this.context.textAlign = 'center';
+        this.context.textBaseline = 'middle';
 
         // STAGE 텍스트
         const stageX = 720 - 168 - 300; // 중앙에서 왼쪽으로 이동
-        this.ctx.fillText(`STAGE ${this.currentStage}`, stageX, 68 + 5);
+        this.context.fillText(`STAGE ${this.currentStage}`, stageX, 68 + 5);
 
         // SCORE 박스 그리기
         this.drawHeaderBox(720, 68, 336, 97, `SCORE ${this.score}`);
@@ -188,17 +211,17 @@ class GamePage {
      * 둥근 모서리 사각형 그리기 헬퍼 함수
      */
     drawRoundedRect(x, y, width, height, radius) {
-        this.ctx.beginPath();
-        this.ctx.moveTo(x + radius, y);
-        this.ctx.lineTo(x + width - radius, y);
-        this.ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-        this.ctx.lineTo(x + width, y + height - radius);
-        this.ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-        this.ctx.lineTo(x + radius, y + height);
-        this.ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-        this.ctx.lineTo(x, y + radius);
-        this.ctx.quadraticCurveTo(x, y, x + radius, y);
-        this.ctx.closePath();
+        this.context.beginPath();
+        this.context.moveTo(x + radius, y);
+        this.context.lineTo(x + width - radius, y);
+        this.context.quadraticCurveTo(x + width, y, x + width, y + radius);
+        this.context.lineTo(x + width, y + height - radius);
+        this.context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        this.context.lineTo(x + radius, y + height);
+        this.context.quadraticCurveTo(x, y + height, x, y + height - radius);
+        this.context.lineTo(x, y + radius);
+        this.context.quadraticCurveTo(x, y, x + radius, y);
+        this.context.closePath();
     }
 
     /**
@@ -213,17 +236,17 @@ class GamePage {
         this.drawRoundedRect(x, y, width, height, borderRadius);
         
         // 박스 배경 (흰색)
-        this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.fill();
+        this.context.fillStyle = '#FFFFFF';
+        this.context.fill();
         
         // 박스 테두리 (녹색, 4px)
-        this.ctx.strokeStyle = '#60CD52';
-        this.ctx.lineWidth = 4;
-        this.ctx.stroke();
+        this.context.strokeStyle = '#60CD52';
+        this.context.lineWidth = 4;
+        this.context.stroke();
 
         // 텍스트
-        this.ctx.fillStyle = '#4F4F4F';
-        this.ctx.fillText(text, centerX, centerY + 5);
+        this.context.fillStyle = '#4F4F4F';
+        this.context.fillText(text, centerX, centerY + 5);
     }
 
     /**
@@ -238,13 +261,13 @@ class GamePage {
         this.drawRoundedRect(x, y, width, height, borderRadius);
         
         // 박스 배경 (흰색)
-        this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.fill();
+        this.context.fillStyle = '#FFFFFF';
+        this.context.fill();
         
         // 박스 테두리 (녹색)
-        this.ctx.strokeStyle = '#60CD52';
-        this.ctx.lineWidth = 4;
-        this.ctx.stroke();
+        this.context.strokeStyle = '#60CD52';
+        this.context.lineWidth = 4;
+        this.context.stroke();
 
         // 타이머 아이콘
         const timerImage = this.images['timer'];
@@ -252,18 +275,18 @@ class GamePage {
             const iconSize = 48;
             const iconX = centerX - 80; // 텍스트 왼쪽에 아이콘
             const iconY = centerY - iconSize / 2;
-            this.ctx.drawImage(timerImage, iconX, iconY, iconSize, iconSize);
+            this.context.drawImage(timerImage, iconX, iconY, iconSize, iconSize);
         }
 
         // 시간 텍스트
-        this.ctx.fillStyle = '#4F4F4F';
-        this.ctx.fillText(timeLeft.toString(), centerX + 24, centerY + 5);
+        this.context.fillStyle = '#4F4F4F';
+        this.context.fillText(timeLeft.toString(), centerX + 24, centerY + 5);
     }
 
     /**
      * 벽돌들 그리기
      */
-    drawBricks() {
+    drawbrickGroups() {
         const startY = 177;
         const groupWidth = 365;
         const groupHeight = 365;
@@ -296,7 +319,7 @@ class GamePage {
         const pokemonImage = this.images[brickGroup.pokemonImageKey];
 
         for (let i = 0; i < totalCells; i++) {
-            const brick = brickGroup.bricks[i];
+            const brick = brickGroup.brickGroups[i];
             
             const row = Math.floor(i / 3);
             const col = i % 3;
@@ -306,12 +329,12 @@ class GamePage {
             if (brick.isPokemon) {
                 // 중앙에 포켓몬 이미지
                 if (pokemonImage) {
-                    this.ctx.drawImage(pokemonImage, x - 55, y - 55, 200, 200); // 포켓몬은 더 크게
+                    this.context.drawImage(pokemonImage, x - 55, y - 55, 200, 200); // 포켓몬은 더 크게
                 }
             } else {
                 // 벽돌 그리기
                 if (brickImage) {
-                    this.ctx.drawImage(brickImage, x, y, cellSize, cellSize);
+                    this.context.drawImage(brickImage, x, y, cellSize, cellSize);
                 }
             }
         }
@@ -321,17 +344,64 @@ class GamePage {
      * 게임 오브젝트들 그리기 (볼, 패들)
      */
     drawGameObjects() {
-        // 볼 그리기
-        const ballImage = this.images['ball_lev1_1'];
+        const ballImage = this.images[`ball_lev${this.ball.level}_1`];
         if (ballImage) {
-            this.ctx.drawImage(ballImage, this.ballPosition.x, this.ballPosition.y, 150, 150);
+            this.context.drawImage(
+                ballImage, 
+                this.ball.x - this.ball.radius,
+                this.ball.y - this.ball.radius, 
+                this.ball.radius * 2 ,
+                this.ball.radius * 2
+            );
         }
 
         // 패들 그리기
-        const paddleImage = this.images['hand'];
-        if (paddleImage) {
-            this.ctx.drawImage(paddleImage, this.paddlePosition.x, this.paddlePosition.y, 200, 200);
+        const handImage = this.images['hand'];
+        if (handImage) {
+            this.context.drawImage(handImage, this.paddle.x, this.paddle.y, 
+                this.paddle.width, this.paddle.height);
         }
+    }
+
+    moveBall() {
+        this.ball.x += this.ball.dx;
+        this.ball.y += this.ball.dy;
+
+        if (this.ball.x + this.ball.radius > this.canvas.width || 
+            this.ball.x - this.ball.radius < 0) {
+            this.ball.dx = -this.ball.dx;
+        }
+
+        // TODO : 바닥에 닿으면 게임 오버 처리
+        if (this.ball.y + this.ball.radius > this.canvas.height) {
+            // this.isGameOver = true;
+        }
+    }
+
+    checkCollisions() {
+        // 패들 충돌 체크
+        if (this.ball.y + this.ball.radius > this.paddle.y &&
+            this.ball.x > this.paddle.x && 
+            this.ball.x < this.paddle.x + this.paddle.width) {
+            this.ball.dy = -Math.abs(this.ball.dy);
+            
+            const paddleCenter = this.paddle.x + this.paddle.width/2;
+            const hitPoint = (this.ball.x - paddleCenter) / (this.paddle.width/2);
+            this.ball.dx = hitPoint * 8;
+        }
+
+        // 헤더 충돌 체크
+        const headerHeight = 137;
+        if (
+            this.ball.y - this.ball.radius <= headerHeight &&
+            this.ball.dy < 0 // 위로 올라가는 중일 때만
+        ) {
+            this.ball.dy = Math.abs(this.ball.dy); // 아래로 튕기기
+        }
+
+        // TODO : 벽돌 충돌 체크
+
+        // TODO: 포켓몬 충돌 체크
     }
 
     /**
@@ -342,8 +412,8 @@ class GamePage {
         const footerY = 1024 - footerHeight;
 
         // 푸터 배경 (반투명 흰색)
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-        this.ctx.fillRect(0, footerY, 1440, footerHeight);
+        this.context.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        this.context.fillRect(0, footerY, 1440, footerHeight);
 
         // 정보 박스
         const boxWidth = 350;
@@ -356,19 +426,19 @@ class GamePage {
         this.drawRoundedRect(boxX, boxY, boxWidth, boxHeight, borderRadius);
         
         // 박스 배경 (흰색)
-        this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.fill();
+        this.context.fillStyle = '#FFFFFF';
+        this.context.fill();
 
         // 박스 테두리 (녹색)
-        this.ctx.strokeStyle = '#60CD52';
-        this.ctx.lineWidth = 4;
-        this.ctx.stroke();
+        this.context.strokeStyle = '#60CD52';
+        this.context.lineWidth = 4;
+        this.context.stroke();
 
         // 빈 컬렉션 텍스트 (임시)
-        this.ctx.fillStyle = '#aaa';
-        this.ctx.font = '18px Arial';
-        this.ctx.textAlign = 'center';
-        // this.ctx.fillText('수집한 포켓몬이 여기에 표시', boxX + boxWidth / 2, boxY + boxHeight / 2);
+        this.context.fillStyle = '#aaa';
+        this.context.font = '18px Arial';
+        this.context.textAlign = 'center';
+        // this.context.fillText('수집한 포켓몬이 여기에 표시', boxX + boxWidth / 2, boxY + boxHeight / 2);
     }
 
     getStyles() {
@@ -421,6 +491,8 @@ class GamePage {
     startGameLoop() {
         const loop = () => {
             this.drawDesign();
+            this.moveBall();
+            this.checkCollisions();
             this.animationFrameId = requestAnimationFrame(loop);
         };
         this.animationFrameId = requestAnimationFrame(loop);
@@ -443,12 +515,13 @@ class GamePage {
         
         // Canvas 초기화
         this.canvas = document.getElementById('gameCanvas');
-        this.ctx = this.canvas.getContext('2d');
+        this.context = this.canvas.getContext('2d');
         
         // 이미지 로딩 후 벽돌 그룹 초기화 및 디자인 그리기
         await this.loadImages();
         this.initializeBrickGroups();
         this.startGameLoop();
+        this.addEventListeners();
         this.startTimer();
     }
 
@@ -464,7 +537,7 @@ class GamePage {
         }
         this.container = null;
         this.canvas = null;
-        this.ctx = null;
+        this.context = null;
         this.styleElement = null;
         this.images = {};
         this.imagesLoaded = false;
