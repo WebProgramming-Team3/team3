@@ -34,6 +34,7 @@ class GamePage {
         this.timeLeft = 60; // 게임 시작 시 남은 시간 (초)
         this.lastTime = null; // 이전 프레임 시간 저장용
         this.isGameOver = false;
+        this.isGameOverHandled = false;
         this.gameResult = null; // 'win' or 'lose'
     }
 
@@ -461,18 +462,53 @@ class GamePage {
         this.context.fillText('다시 시작', this.canvas.width/2, buttonY + 25);
     
         // 게임 재시작 버튼 이벤트
-        this.canvas.addEventListener('click', (e) => {
+        const restartHandler = (e) => {
             const rect = this.canvas.getBoundingClientRect();
             const clickX = e.clientX - rect.left;
             const clickY = e.clientY - rect.top;
-    
+        
             if (clickX > buttonX && clickX < buttonX + buttonWidth &&
                 clickY > buttonY && clickY < buttonY + buttonHeight) {
+                this.canvas.removeEventListener('click', restartHandler);
                 this.resetGame();
             }
-        });
+        };
+        
+        this.canvas.addEventListener('click', restartHandler);
     }
 
+    resetGame() {
+        // 기본 상태 초기화
+        this.score = 0;
+        this.timeLeft = 60;
+        this.isGameOver = false;
+        this.isGameOverHandled = false;
+        this.gameResult = null;
+    
+        // 패들 위치 초기화
+        this.paddle.x = (this.canvasWidth - this.paddle.width) / 2;
+        this.paddle.y = this.canvasHeight - this.footerHeight - this.paddle.height;
+    
+        // 공 위치 및 속도 초기화
+        this.ball.x = this.paddle.x + this.paddle.width / 2;
+        this.ball.y = this.paddle.y - this.ball.radius;
+        this.ball.dx = 4;
+        this.ball.dy = -4;
+        this.ball.level = 1;
+        this.ball.power = 1;
+    
+        // 포켓몬 포획 정보 초기화
+        if (Array.isArray(this.pokemons)) {
+            this.pokemons.forEach(p => p.caught = false);
+        }
+    
+        // 벽돌 그룹 초기화
+        this.initializeBrickGroups();
+    
+        // 게임 루프 재시작
+        this.startGameLoop();
+        this.startTimer();
+    }
 
     /**
      * 푸터 그리기
@@ -559,7 +595,8 @@ class GamePage {
 
     startGameLoop() {
         const loop = () => {
-            if (this.isGameOver) {
+            if (this.isGameOver && !this.isGameOverHandled) {
+                this.isGameOverHandled = true;
                 this.stopGameLoop();
                 this.endGame();
                 return;
