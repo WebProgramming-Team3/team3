@@ -52,7 +52,7 @@ class GamePage {
         this.images = {};
         this.imagesLoaded = false;
         this.brickGroups = [];
-        this.timeLeft = 10;
+        this.timeLeft = 60;
         this.lastTime = null;
         this.isGameOver = false;
         this.isGameOverHandled = false;
@@ -105,6 +105,7 @@ class GamePage {
             'go_home': './assets/utils/go_home.png',
             'go_mini_game': './assets/utils/go_mini_game.png',
             'add_ranking': './assets/utils/add_ranking.png',
+            'button_next': './assets/utils/button_next.png', // 다음 스테이지 버튼 추가
         };
 
         // 벽돌 이미지들 동적 추가
@@ -586,6 +587,30 @@ class GamePage {
             const imgX = (this.canvas.width - imgWidth) / 2;
             const imgY = (this.canvas.height - imgHeight) / 2 - 100;
             this.context.drawImage(resultImage, imgX, imgY, imgWidth, imgHeight);
+
+            // win 상태이고 현재 스테이지가 3 미만일 때 next 버튼 추가
+            if (status === 'win' && this.currentStage < 3) {
+                const nextButtonImage = this.images['button_next'];
+                if (nextButtonImage) {
+                    // 원본 비율 유지 (252:118)하면서 높이를 100px로 설정
+                    const buttonHeight = 100;
+                    const buttonWidth = Math.floor((252 * buttonHeight) / 118); // 약 213px
+                    const buttonX = imgX + imgWidth + 20; // win 이미지 우측에 배치
+                    const buttonY = imgY + (imgHeight - buttonHeight) / 2; // win 이미지와 수직 중앙 정렬
+                    
+                    // next 버튼 영역 정보 저장
+                    this.nextButton = {
+                        x: buttonX,
+                        y: buttonY,
+                        width: buttonWidth,
+                        height: buttonHeight,
+                        action: 'next_stage'
+                    };
+                    
+                    // next 버튼 그리기
+                    this.context.drawImage(nextButtonImage, buttonX, buttonY, buttonWidth, buttonHeight);
+                }
+            }
         }
     
         // 점수 텍스트
@@ -634,6 +659,24 @@ class GamePage {
             const clickX = e.clientX - rect.left;
             const clickY = e.clientY - rect.top;
 
+            // next 버튼 클릭 체크
+            if (this.nextButton && 
+                clickX >= this.nextButton.x && clickX <= this.nextButton.x + this.nextButton.width &&
+                clickY >= this.nextButton.y && clickY <= this.nextButton.y + this.nextButton.height) {
+                
+                // 현재 상태 저장
+                localStorage.setItem('gameScore', this.score.toString());
+                localStorage.setItem('collectedPokemons', JSON.stringify(this.collectedPokemons));
+                localStorage.setItem('ballLevel', this.ball.level.toString());
+                localStorage.setItem('ballPower', this.ball.power.toString());
+                
+                // 다음 스테이지로 이동
+                this.currentStage++;
+                this.resetGame();
+                return;
+            }
+
+            // 기존 버튼들 클릭 체크
             for (const button of this.endGameButtons) {
                 if (clickX >= button.x && clickX <= button.x + button.width &&
                     clickY >= button.y && clickY <= button.y + button.height) {
@@ -674,10 +717,11 @@ class GamePage {
 
     resetGame() {
         // 스테이지 변경 시에도 점수와 포켓몬 컬렉션, 볼 레벨 유지
-        this.timeLeft = 10;
+        this.timeLeft = 60;
         this.isGameOver = false;
         this.isGameOverHandled = false;
         this.gameResult = null;
+        this.nextButton = null; // next 버튼 정보 초기화
     
         this.paddle.x = (this.canvasWidth - this.paddle.width) / 2;
         this.paddle.y = this.canvasHeight - this.footerHeight - this.paddle.height;
@@ -687,12 +731,7 @@ class GamePage {
         this.ball.y = this.paddle.y - this.ball.radius;
         this.ball.dx = ballSpeed;
         this.ball.dy = -ballSpeed;
-        this.ball.level = 1;
-        this.ball.power = 1;
     
-        // 포켓몬 컬렉션 초기화
-        this.collectedPokemons = [];
-        
         // 스크롤 위치 초기화
         this.scrollX = 0;
     
