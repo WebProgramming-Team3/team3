@@ -315,6 +315,12 @@ class MiniGamePage {
         this.styleElement = document.createElement('style');
         this.styleElement.textContent = this.getStyles();
         document.head.appendChild(this.styleElement);
+        
+        let img1 = document.createElement("img");
+        $(".circle-box.left-circle").append(img1);
+        let img2 = document.createElement("img");
+        img2.id = 'you';
+        $(".circle-box.right-circle").append(img2);
 
         // 이벤트 리스너 추가
         this.addEventListeners();
@@ -327,6 +333,8 @@ class MiniGamePage {
             option.addEventListener('click', (e) => {
                 this.selectRPSChoice(e.currentTarget);
                 this.opponentChoice();
+                this.score();
+                console.log(this.opponentChoice(), this.selectedChoice);
             });
         });
     }
@@ -341,13 +349,9 @@ class MiniGamePage {
         
         // 선택된 값 저장
         this.selectedChoice = selectedOption.dataset.choice;
-        console.log('선택된 가위바위보:', this.selectedChoice);
-        let img = document.createElement("img");
         //선택한 가위바위보 띄우기
-        img.src = `assets/minigame/${this.selectedChoice}.png`;
-        $(".circle-box.right-circle").append(img);
+        $("#you").attr("src", `assets/minigame/${this.selectedChoice}.png`);
         this.selected = true;
-
     }
 
     opponentChoice(){
@@ -355,11 +359,29 @@ class MiniGamePage {
             const rsp = {1:'rock', 2:'scissors', 3:'paper'};
             let num = parseInt(Math.random()*3 + 1);
             let key = rsp[num];
-            let img = document.createElement("img");
-            img.src = `assets/minigame/${key}.png`;
-            $(".circle-box.left-circle").append(img);
-            console.log("랜덤");
+            $(".circle-box.left-circle img").attr("src", `assets/minigame/${key}.png`);
+            return key;
         }
+    }
+
+    score(){
+        switch(this.opponentChoice()){
+            case 'rock' : 
+                {if(this.selectedChoice == 'scissors') this.opponentScore++;
+                else if(this.selectedChoice == 'paper') this.myScore++;
+                break;}
+            case 'scissors' :
+                {if(this.selectedChoice == 'rock') this.myScore++;
+                 else if(this.selectedChoice == 'paper') this.opponentScore++;
+                break;}
+            case 'paper' :
+                {if(this.selectedChoice == 'rock') this.opponentScore++;
+                 else if(this.selectedChoice == 'scissors') this.myScore++;
+                break;}
+        }
+        this.updateMyScore(this.myScore);
+        this.updateOpponentScore(this.opponentScore);
+        this.selected = false;
     }
 
     // 점수 업데이트 메서드들
@@ -376,7 +398,8 @@ class MiniGamePage {
     updateScoreDisplay() {
         const scoreElement = this.container.querySelector('.score-box span');
         if (scoreElement) {
-            scoreElement.textContent = `SCORE ${this.myScore} : ${this.opponentScore}`;
+            scoreElement.textContent = `SCORE ${this.opponentScore} : ${this.myScore}`;
+            //  화면 배치상 (상대:나)가 직관적일 것 같아서 수정
         }
     }
 
