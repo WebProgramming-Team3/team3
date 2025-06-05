@@ -250,7 +250,7 @@ class GamePage {
         this.context.fillText(`STAGE ${this.currentStage}`, stageX, 68 + 5);
 
         // SCORE 박스 그리기
-        this.drawHeaderBox(720, 68, 336, 97, `SCORE ${this.score}`);
+        this.drawHeaderBox(720, 68, 500, 97, `SCORE ${this.score}`);
 
         // TIMER 박스 그리기
         const timerX = 720 + 168 + 300; // 중앙에서 오른쪽으로 이동
@@ -561,18 +561,6 @@ class GamePage {
         this.stopGameLoop();
         this.stopTimer();
         this.gameResult = status;
-
-        // 게임 패배 시 모든 상태 초기화
-        if (status === 'lose') {
-            this.score = 0;
-            this.collectedPokemons = [];
-            this.ball.level = 1;
-            this.ball.power = 1;
-            localStorage.removeItem('gameScore');
-            localStorage.removeItem('collectedPokemons');
-            localStorage.removeItem('ballLevel');
-            localStorage.removeItem('ballPower');
-        }
     
         // 캔버스 전체 덮기
         this.context.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -700,7 +688,7 @@ class GamePage {
                             });
                             localStorage.setItem('rankings', JSON.stringify(rankings));
                             if (window.router) {
-                                window.router.navigate('home');
+                                window.router.navigate('ranking');
                             }
                             break;
                         case 'go_mini_game':
@@ -713,6 +701,18 @@ class GamePage {
                 }
             }
         };
+
+        // 게임 패배 시 모든 상태 초기화
+        if (status === 'lose') {
+            this.score = 0;
+            this.collectedPokemons = [];
+            this.ball.level = 1;
+            this.ball.power = 1;
+            localStorage.removeItem('gameScore');
+            localStorage.removeItem('collectedPokemons');
+            localStorage.removeItem('ballLevel');
+            localStorage.removeItem('ballPower');
+        }
 
         this.canvas.addEventListener('click', handleClick);
     }
@@ -755,9 +755,9 @@ class GamePage {
         this.context.fillRect(0, footerY, this.canvasWidth, this.footerHeight);
 
         // 정보 박스
-        const boxWidth = 350;
+        const boxWidth = 1300;
         const boxHeight = 100;
-        const boxX = this.canvasWidth - boxWidth - 20;
+        const boxX = this.canvasWidth - boxWidth - 120;
         const boxY = footerY + (this.footerHeight - boxHeight) / 2;
 
         // 둥근 모서리 박스 그리기
@@ -780,8 +780,8 @@ class GamePage {
             const startX = boxX + padding;
             const startY = boxY + (boxHeight - pokemonSize) / 2;
 
-            // 최대 5개까지만 표시
-            const displayCount = Math.min(5, this.collectedPokemons.length);
+            // 최대 18개까지만 표시
+            const displayCount = Math.min(18, this.collectedPokemons.length);
             
             for (let i = 0; i < displayCount; i++) {
                 const pokemon = this.collectedPokemons[i];
@@ -798,13 +798,13 @@ class GamePage {
             }
 
             // 더 많은 포켓몬이 있을 경우 +N 표시
-            if (this.collectedPokemons.length > 5) {
+            if (this.collectedPokemons.length > 18) {
                 this.context.font = '20px Bungee';
                 this.context.fillStyle = '#4F4F4F';
                 this.context.textAlign = 'left';
-                const plusX = startX + 5 * (pokemonSize + padding);
+                const plusX = startX + 18 * (pokemonSize + padding);
                 this.context.fillText(
-                    `+${this.collectedPokemons.length - 5}`,
+                    `+${this.collectedPokemons.length - 18}`,
                     plusX,
                     startY + pokemonSize/2
                 );
@@ -849,7 +849,7 @@ class GamePage {
     startTimer() {
         this.timerIntervalId = setInterval(() => {
             this.timeLeft -= 1;
-            if (this.timeLeft <= 0) {
+            if (this.timeLeft < 0) {
                 this.timeLeft = 0;
                 this.stopTimer();
                 if (!this.isGameOver) {  // 아직 게임오버되지 않았다면
