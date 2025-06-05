@@ -340,6 +340,10 @@ class MiniGamePage {
         // 선택된 값 저장
         this.selectedChoice = selectedOption.dataset.choice;
         console.log('선택된 가위바위보:', this.selectedChoice);
+        let img = document.createElement("img");
+        //선택한 가위바위보 띄우기
+        img.src = `assets/minigame/${this.selectedChoice}.png`;
+        $(".circle-box.right-circle").append(img);
     }
 
     getSelectedChoice() {
