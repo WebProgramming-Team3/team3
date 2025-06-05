@@ -18,8 +18,6 @@ class GamePage {
             y: this.canvasHeight - this.footerHeight - 120 // 하단 footer 위
         };
 
-        const ballSpeed = this.ballSpeeds[this.difficulty];
-
         // 새 게임 시작 시 초기화
         if (this.currentStage === 1) {
             localStorage.removeItem('gameScore');
