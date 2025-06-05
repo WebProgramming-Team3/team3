@@ -705,7 +705,7 @@ class GamePage {
                             break;
                         case 'go_mini_game':
                             if(window.router){
-                                window.router.navigate('minigame');
+                                window.router.navigate('minigame'); //미니게임으로 이동
                             }
                             break;
                     }
