@@ -891,6 +891,9 @@ class GamePage {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
         }
+        let allImageKeys = this.collectedPokemons.map(pokemon => pokemon.imageKey);
+        allImageKeys = ["poke_lev1_1", "poke_lev2_3"];
+        return allImageKeys;
     }
 
     async mount(container) {
@@ -947,3 +950,4 @@ class GamePage {
 } 
 //전역 등록
 window.GamePage = GamePage;
+const game = new GamePage();

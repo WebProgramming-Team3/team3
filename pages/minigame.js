@@ -1,3 +1,4 @@
+//const game = new GamePage(); //game.js 접근
 class MiniGamePage {
     constructor() {
         // 미니게임 관련 변수들 초기화
@@ -332,16 +333,27 @@ class MiniGamePage {
     
         // 이벤트 리스너 추가
         this.addEventListeners();
+        this.setGameData(game.stopGameLoop()); //"poke_lev1_1", "poke_lev2_3"
     }
 
     addEventListeners() {
         // 가위바위보 선택 이벤트
         const rpsOptions = this.container.querySelectorAll('.rps-option');
+        let i = 0;
         rpsOptions.forEach(option => {
             option.addEventListener('click', (e) => {
+                const a = parseInt(Math.random()*3 + 1);
+                let b = 0;
+                if(a === 3) b = parseInt(Math.random()*3 + 1);
+                else b = parseInt(Math.random()*3 + 1);
+                //상대 이미지 랜덤 배정
+                $("#com").attr("src", `assets/pokemon/poke_lev${a}_${b}.png`);
+                //수집한 포켓몬 순서대로
+                $("#you").attr("src", `assets/pokemon/${this.gameData[i]}.png`);
                 this.selectRPSChoice(e.currentTarget);
                 this.opponentChoice();
                 this.score();
+                i++;
             });
         });
     }
