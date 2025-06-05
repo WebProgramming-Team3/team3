@@ -250,7 +250,7 @@ class GamePage {
         this.context.fillText(`STAGE ${this.currentStage}`, stageX, 68 + 5);
 
         // SCORE 박스 그리기
-        this.drawHeaderBox(720, 68, 336, 97, `SCORE ${this.score}`);
+        this.drawHeaderBox(720, 68, 500, 97, `SCORE ${this.score}`);
 
         // TIMER 박스 그리기
         const timerX = 720 + 168 + 300; // 중앙에서 오른쪽으로 이동
@@ -561,18 +561,6 @@ class GamePage {
         this.stopGameLoop();
         this.stopTimer();
         this.gameResult = status;
-
-        // 게임 패배 시 모든 상태 초기화
-        if (status === 'lose') {
-            this.score = 0;
-            this.collectedPokemons = [];
-            this.ball.level = 1;
-            this.ball.power = 1;
-            localStorage.removeItem('gameScore');
-            localStorage.removeItem('collectedPokemons');
-            localStorage.removeItem('ballLevel');
-            localStorage.removeItem('ballPower');
-        }
     
         // 캔버스 전체 덮기
         this.context.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -700,7 +688,7 @@ class GamePage {
                             });
                             localStorage.setItem('rankings', JSON.stringify(rankings));
                             if (window.router) {
-                                window.router.navigate('home');
+                                window.router.navigate('ranking');
                             }
                             break;
                         case 'go_mini_game':
@@ -711,6 +699,18 @@ class GamePage {
                 }
             }
         };
+
+        // 게임 패배 시 모든 상태 초기화
+        if (status === 'lose') {
+            this.score = 0;
+            this.collectedPokemons = [];
+            this.ball.level = 1;
+            this.ball.power = 1;
+            localStorage.removeItem('gameScore');
+            localStorage.removeItem('collectedPokemons');
+            localStorage.removeItem('ballLevel');
+            localStorage.removeItem('ballPower');
+        }
 
         this.canvas.addEventListener('click', handleClick);
     }
