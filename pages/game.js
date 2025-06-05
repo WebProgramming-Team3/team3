@@ -945,3 +945,5 @@ class GamePage {
         }
     }
 } 
+//전역 등록
+window.GamePage = GamePage;
