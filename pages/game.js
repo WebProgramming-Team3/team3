@@ -18,6 +18,17 @@ class GamePage {
             y: this.canvasHeight - this.footerHeight - 120 // 하단 footer 위
         };
 
+        // 난이도별 공 속도 설정
+        this.ballSpeeds = {
+            'easy': 1,
+            'normal': 2,
+            'hard': 4
+        };
+        
+        // 현재 난이도 가져오기
+        this.difficulty = typeof SettingsPage !== 'undefined' ? 
+        SettingsPage.getDifficulty() : 'normal';
+        
         // 새 게임 시작 시 초기화
         if (this.currentStage === 1) {
             localStorage.removeItem('gameScore');
@@ -25,12 +36,13 @@ class GamePage {
             localStorage.removeItem('ballLevel');
             localStorage.removeItem('ballPower');
         }
-
+        
+        const ballSpeed = this.ballSpeeds[this.difficulty];
         this.ball = {
             x: this.paddle.x + this.paddle.width / 2,
             y: this.paddle.y - 25,
-            dx: 2,
-            dy: -2,
+            dx: ballSpeed,
+            dy: -ballSpeed,
             radius: 25,
             level: this.currentStage === 1 ? 1 : (parseInt(localStorage.getItem('ballLevel')) || 1),
             power: this.currentStage === 1 ? 1 : (parseInt(localStorage.getItem('ballPower')) || 1)
@@ -449,7 +461,8 @@ class GamePage {
             
             const paddleCenter = this.paddle.x + this.paddle.width/2;
             const hitPoint = (this.ball.x - paddleCenter) / (this.paddle.width/2);
-            this.ball.dx = hitPoint * 5; // 패들 충돌 시 x축 속도 조절
+            const ballSpeed = this.ballSpeeds[this.difficulty];
+            this.ball.dx = hitPoint * (ballSpeed * 2.5); // 난이도별 속도에 비례하여 조정
         }
 
         // 헤더 충돌 체크
@@ -669,10 +682,11 @@ class GamePage {
         this.paddle.x = (this.canvasWidth - this.paddle.width) / 2;
         this.paddle.y = this.canvasHeight - this.footerHeight - this.paddle.height;
     
+        const ballSpeed = this.ballSpeeds[this.difficulty];
         this.ball.x = this.paddle.x + this.paddle.width / 2;
         this.ball.y = this.paddle.y - this.ball.radius;
-        this.ball.dx = 2;
-        this.ball.dy = -2;
+        this.ball.dx = ballSpeed;
+        this.ball.dy = -ballSpeed;
         this.ball.level = 1;
         this.ball.power = 1;
     

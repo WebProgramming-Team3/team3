@@ -27,15 +27,17 @@ class SettingsPage {
             BACK_BUTTON_HOVER_BG: '#4aa040'
         };
 
-        // 설정 값 초기화 시, 정적 속성 값을 사용
+        // 설정 값 초기화
         this.backgroundOption = SettingsPage.currentBackgroundSetting;
         this.soundsOption = this.CONSTANTS.OPTION_ON;
+        this.difficultyOption = localStorage.getItem('difficulty') || 'normal';
 
         // DOM 요소 캐싱용 (mount에서 초기화)
         this.bgLightButton = null;
         this.bgDarkButton = null;
         this.soundsOnButton = null;
         this.soundsOffButton = null;
+        this.difficultyButton = null;
         this.backToHomeButton = null;
     }
 
@@ -65,6 +67,12 @@ class SettingsPage {
                                 <button id="sounds-on-button" class="option-button" data-type="sounds" data-value="${this.CONSTANTS.OPTION_ON}">on</button>
                                 <span class="button-divider">/</span>
                                 <button id="sounds-off-button" class="option-button" data-type="sounds" data-value="${this.CONSTANTS.OPTION_OFF}">off</button>
+                            </div>
+                        </div>
+                        <div class="option-item">
+                            <div class="option-title-text">Ball Speed</div>
+                            <div class="option-buttons">
+                                <button id="difficulty-button" class="option-button" data-type="difficulty" data-value="${this.difficultyOption}">${this.difficultyOption}</button>
                             </div>
                         </div>
                     </div>
@@ -107,7 +115,7 @@ class SettingsPage {
                 .options-container {
                     display: flex; flex-direction: column; align-items: center;
                     width: 1000px; /* Figma 기준 options-container 너비 */
-                    gap: 150px; /* 옵션 아이템 간 간격 */
+                    gap: 50px; /* 옵션 아이템 간 간격 */
                 }
                 .option-item {
                     display: flex; justify-content: space-between; align-items: center;
@@ -196,6 +204,7 @@ class SettingsPage {
         this.bgDarkButton = document.getElementById('bg-dark-button');
         this.soundsOnButton = document.getElementById('sounds-on-button');
         this.soundsOffButton = document.getElementById('sounds-off-button');
+        this.difficultyButton = document.getElementById('difficulty-button');
         this.backToHomeButton = document.getElementById('back-to-home-button');
 
         this.loadSettings();
@@ -207,8 +216,8 @@ class SettingsPage {
      * 이벤트 리스너 설정
      */
     setupEventListeners() {
-        // 옵션 버튼들에 대한 공통 이벤트 리스너
-        const optionButtons = document.querySelectorAll('.option-button');
+        // 옵션 버튼들에 대한 공통 이벤트 리스너 (난이도 버튼 제외)
+        const optionButtons = document.querySelectorAll('.option-button:not(#difficulty-button)');
         optionButtons.forEach(button => {
             button.addEventListener('click', (event) => {
                 const type = event.target.dataset.type;
@@ -216,6 +225,21 @@ class SettingsPage {
                 this.handleOptionChange(type, value);
             });
         });
+
+        // 난이도 버튼 이벤트 리스너
+        if (this.difficultyButton) {
+            this.difficultyButton.addEventListener('click', () => {
+                const difficulties = ['easy', 'normal', 'hard'];
+                const currentIndex = difficulties.indexOf(this.difficultyOption);
+                const nextIndex = (currentIndex + 1) % difficulties.length;
+                const nextDifficulty = difficulties[nextIndex];
+                
+                this.difficultyOption = nextDifficulty;
+                this.difficultyButton.textContent = nextDifficulty;
+                this.difficultyButton.dataset.value = nextDifficulty;
+                localStorage.setItem('difficulty', nextDifficulty);
+            });
+        }
 
         if (this.backToHomeButton) {
             this.backToHomeButton.addEventListener('click', () => {
@@ -292,6 +316,9 @@ class SettingsPage {
             // 사운드 매니저가 아직 로드되지 않은 경우 기본값 사용
             this.soundsOption = this.CONSTANTS.OPTION_ON;
         }
+
+        // 난이도 설정 불러오기
+        this.difficultyOption = localStorage.getItem('difficulty') || 'normal';
     }
 
     // --- 정적 메서드 추가 ---
@@ -302,5 +329,21 @@ class SettingsPage {
     static getBackgroundSetting() {
         // localStorage 대신 정적 속성 값을 반환
         return SettingsPage.currentBackgroundSetting;
+    }
+
+    /**
+     * 현재 난이도 설정을 가져옴
+     * @returns {string} 'easy', 'normal', 또는 'hard'
+     */
+    static getDifficulty() {
+        return localStorage.getItem('difficulty') || 'normal';
+    }
+
+    /**
+     * 난이도 설정을 변경
+     * @param {string} value - 'easy', 'normal', 또는 'hard'
+     */
+    static setDifficulty(value) {
+        localStorage.setItem('difficulty', value);
     }
 } 
