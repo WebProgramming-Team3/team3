@@ -19,6 +19,7 @@ class Router {
         this.addRoute('settings', SettingsPage);
         this.addRoute('howtoplay', HowToPlayPage);
         this.addRoute('ranking', RankingPage);
+        this.addRoute('minigame', MiniGamePage);
 
         // 브라우저 뒤로가기/앞으로가기 처리
         window.addEventListener('popstate', (event) => {
