@@ -1,4 +1,4 @@
-//const game = new GamePage(); //game.js 접근
+const game = new GamePage(); //game.js 접근
 class MiniGamePage {
     constructor() {
         // 미니게임 관련 변수들 초기화
