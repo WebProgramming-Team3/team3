@@ -30,31 +30,41 @@ class GamePage {
         };
 
         const ballSpeed = this.ballSpeeds[this.difficulty];
+
+        // 새 게임 시작 시 초기화
+        if (this.currentStage === 1) {
+            localStorage.removeItem('gameScore');
+            localStorage.removeItem('collectedPokemons');
+            localStorage.removeItem('ballLevel');
+            localStorage.removeItem('ballPower');
+        }
+
         this.ball = {
             x: this.paddle.x + this.paddle.width / 2,
             y: this.paddle.y - 25,
             dx: ballSpeed,
             dy: -ballSpeed,
             radius: 25,
-            level: 1,
-            power: 1  // 초기 데미지
+            level: this.currentStage === 1 ? 1 : (parseInt(localStorage.getItem('ballLevel')) || 1),
+            power: this.currentStage === 1 ? 1 : (parseInt(localStorage.getItem('ballPower')) || 1)
         };
-        this.score = 0; // 점수 
-        this.images = {}; // 이미지 캐시
+
+        this.score = this.currentStage === 1 ? 0 : (parseInt(localStorage.getItem('gameScore')) || 0);
+        this.images = {};
         this.imagesLoaded = false;
-        this.brickGroups = []; // 벽돌 그룹 정보 저장
-        this.timeLeft = 60; // 게임 시작 시 남은 시간 (초)
-        this.lastTime = null; // 이전 프레임 시간 저장용
+        this.brickGroups = [];
+        this.timeLeft = 10;
+        this.lastTime = null;
         this.isGameOver = false;
         this.isGameOverHandled = false;
-        this.gameResult = null; // 'win' or 'lose'
+        this.gameResult = null;
         this.pokemons = [];
-        this.collectedPokemons = []; // 수집된 포켓몬 배열 추가
+        this.collectedPokemons = this.currentStage === 1 ? [] : (JSON.parse(localStorage.getItem('collectedPokemons')) || []);
         
         // 스크롤 관련 속성
         this.scrollX = 0;
-        this.scrollSpeed = 0.3; // 스크롤 속도 감소
-        this.totalGroups = 15; // 그룹 수 (5세트)
+        this.scrollSpeed = 0.3;
+        this.totalGroups = 15;
     }
 
     /**
@@ -91,6 +101,11 @@ class GamePage {
             'poke_lev3_1': './assets/pokemon/poke_lev3_1.png',
             'poke_lev3_2': './assets/pokemon/poke_lev3_2.png',
             'poke_lev3_3': './assets/pokemon/poke_lev3_3.png',
+            
+            // 엔딩 버튼 이미지 추가
+            'go_home': './assets/utils/go_home.png',
+            'go_mini_game': './assets/utils/go_mini_game.png',
+            'add_ranking': './assets/utils/add_ranking.png',
         };
 
         // 벽돌 이미지들 동적 추가
@@ -465,60 +480,61 @@ class GamePage {
 
             const baseX = group.groupIndex * (365 + 50) - this.scrollX;
             
-            // 화면 범위를 약간 넓게 잡아서 체크 (-500 ~ canvasWidth + 500) -> 이거 안하면 막 튀어나오고 있는 벽돌에 충돌이 안됨
             if (baseX < -500 || baseX > this.canvasWidth + 500) continue;
 
             for (const brick of group.brickGroups) {
-                // 이미 부서진 벽돌이나 포획된 포켓몬은 무시
                 if (brick.opacity <= 0 || (brick.isPokemon && brick.caught)) continue;
 
-                // 충돌 체크
                 if (this.isCircleRectColliding(this.ball, brick)) {
                     collisionFound = true;
 
-                    // 충돌 방향 계산
+                    // 충돌 방향 계산 및 반사 처리 (기존 코드 유지)
                     const ballCenterX = this.ball.x;
                     const ballCenterY = this.ball.y;
                     const brickCenterX = brick.x + brick.width / 2;
                     const brickCenterY = brick.y + brick.height / 2;
 
-                    // 충돌 지점과 벽돌 중심 사이의 각도
                     const angle = Math.atan2(ballCenterY - brickCenterY, ballCenterX - brickCenterX);
                     const PI = Math.PI;
 
-                    // 각도에 따른 반사 방향 결정
                     if (angle > -PI/4 && angle < PI/4) {
-                        // 오른쪽에서 충돌
                         this.ball.dx = Math.abs(this.ball.dx);
                     } else if (angle > PI/4 && angle < 3*PI/4) {
-                        // 아래에서 충돌
                         this.ball.dy = Math.abs(this.ball.dy);
                     } else if (angle > -3*PI/4 && angle < -PI/4) {
-                        // 위에서 충돌
                         this.ball.dy = -Math.abs(this.ball.dy);
                     } else {
-                        // 왼쪽에서 충돌
                         this.ball.dx = -Math.abs(this.ball.dx);
                     }
 
                     if (brick.isPokemon) {
-                        // 포켓몬 포획 처리
+                        // 포켓몬 포획 처리 - 5점 추가
                         brick.caught = true;
-                        const pokemonLevel = parseInt(group.pokemonImageKey.split('_')[1].substring(3));
-                        this.score += pokemonLevel;
+                        this.score += 5; // 포켓몬 포획 점수
                         this.updateBallLevel();
                         
+                        // 포획한 포켓몬 저장
                         this.collectedPokemons.push({
                             imageKey: group.pokemonImageKey,
                             stage: this.currentStage,
                             groupIndex: group.groupIndex
                         });
+                        
+                        // localStorage에 저장
+                        localStorage.setItem('collectedPokemons', JSON.stringify(this.collectedPokemons));
                     } else {
                         // 일반 벽돌 데미지 처리
                         brick.health -= this.ball.power;
                         brick.opacity = Math.max(0, brick.health / brick.maxHealth);
+                        
+                        // 벽돌이 완전히 깨졌을 때 1점 추가
+                        if (brick.health <= 0) {
+                            this.score += 1;
+                        }
                     }
                     
+                    // 점수 저장
+                    localStorage.setItem('gameScore', this.score.toString());
                     break;
                 }
             }
@@ -545,6 +561,18 @@ class GamePage {
         this.stopGameLoop();
         this.stopTimer();
         this.gameResult = status;
+
+        // 게임 패배 시 모든 상태 초기화
+        if (status === 'lose') {
+            this.score = 0;
+            this.collectedPokemons = [];
+            this.ball.level = 1;
+            this.ball.power = 1;
+            localStorage.removeItem('gameScore');
+            localStorage.removeItem('collectedPokemons');
+            localStorage.removeItem('ballLevel');
+            localStorage.removeItem('ballPower');
+        }
     
         // 캔버스 전체 덮기
         this.context.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -561,80 +589,93 @@ class GamePage {
             this.context.drawImage(resultImage, imgX, imgY, imgWidth, imgHeight);
         }
     
-        // 텍스트
+        // 점수 텍스트
         this.context.font = '24px Bungee, cursive';
         this.context.fillStyle = 'white';
         this.context.textAlign = 'center';
         this.context.fillText(`최종 점수: ${this.score}`, this.canvas.width/2, this.canvas.height/2 + 100);
-    
-        const caught = this.collectedPokemons.length;
-        this.context.fillText(`포획한 포켓몬: ${caught}마리`, this.canvas.width/2, this.canvas.height/2 + 140);
-    
-        // 버튼 설정
-        const buttonWidth = 200;
-        const buttonHeight = 50;
-        const buttonX = this.canvas.width/2 - buttonWidth/2;
+        this.context.fillText(`포획한 포켓몬: ${this.collectedPokemons.length}마리`, this.canvas.width/2, this.canvas.height/2 + 140);
+
+        // 버튼 이미지 설정
+        const buttonImages = status === 'win' ? 
+            ['go_home', 'go_mini_game', 'add_ranking'] : 
+            ['go_home', 'add_ranking'];
+        
+        // 버튼 이미지 원본 크기 (4:1 비율)
+        const buttonWidth = 400;
+        const buttonHeight = 100;
+        const buttonSpacing = 40;
+        const totalWidth = buttonImages.length * buttonWidth + (buttonImages.length - 1) * buttonSpacing;
+        let startX = (this.canvas.width - totalWidth) / 2;
         const buttonY = this.canvas.height/2 + 200;
-    
-        // 승리했을 때와 패배했을 때 다른 버튼 표시
-        if (status === 'win') {
-            if (this.currentStage < 3) {
-                // 다음 스테이지 버튼
-                this.context.fillStyle = '#60CD52';
-                this.context.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
-                this.context.fillStyle = 'white';
-                this.context.fillText('다음 스테이지', this.canvas.width/2, buttonY + 32);
-            } else {
-                // 스테이지 3에서는 메인화면으로 이동 버튼
-                this.context.fillStyle = '#60CD52';
-                this.context.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
-                this.context.fillStyle = 'white';
-                this.context.fillText('메인으로', this.canvas.width/2, buttonY + 32);
+
+        // 버튼 영역 정보 저장
+        this.endGameButtons = buttonImages.map((key, index) => {
+            const buttonX = startX + (buttonWidth + buttonSpacing) * index;
+            return {
+                x: buttonX,
+                y: buttonY,
+                width: buttonWidth,
+                height: buttonHeight,
+                action: key
+            };
+        });
+
+        // 버튼 이미지 그리기
+        this.endGameButtons.forEach(button => {
+            const buttonImage = this.images[button.action];
+            if (buttonImage) {
+                this.context.drawImage(buttonImage, button.x, button.y, button.width, button.height);
             }
-        } else {
-            // 패배했을 때는 재시작 버튼
-            this.context.fillStyle = '#60CD52';
-            this.context.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
-            this.context.fillStyle = 'white';
-            this.context.fillText('다시 시작', this.canvas.width/2, buttonY + 32);
-        }
-    
-        // 게임 재시작/다음 스테이지/메인화면 버튼 이벤트
-        const buttonHandler = (e) => {
+        });
+
+        // 클릭 이벤트 리스너 추가
+        const handleClick = (e) => {
             const rect = this.canvas.getBoundingClientRect();
             const clickX = e.clientX - rect.left;
             const clickY = e.clientY - rect.top;
-        
-            if (clickX > buttonX && clickX < buttonX + buttonWidth &&
-                clickY > buttonY && clickY < buttonY + buttonHeight) {
-                this.canvas.removeEventListener('click', buttonHandler);
-                
-                if (status === 'win') {
-                    if (this.currentStage < 3) {
-                        // 다음 스테이지로 이동
-                        this.currentStage++;
-                        this.collectedPokemons = []; // 스테이지 변경 시 포켓몬 컬렉션 초기화
-                        this.resetGame();
-                    } else {
-                        // 메인화면으로 이동
-                        if (window.router) {
-                            window.router.navigate('home');
-                        }
+
+            for (const button of this.endGameButtons) {
+                if (clickX >= button.x && clickX <= button.x + button.width &&
+                    clickY >= button.y && clickY <= button.y + button.height) {
+                    
+                    // 클릭 이벤트 리스너 제거
+                    this.canvas.removeEventListener('click', handleClick);
+
+                    switch (button.action) {
+                        case 'go_home':
+                            if (window.router) {
+                                window.router.navigate('home');
+                            }
+                            break;
+                        case 'add_ranking':
+                            // 랭킹에 점수 추가
+                            const rankings = JSON.parse(localStorage.getItem('rankings') || '[]');
+                            rankings.push({
+                                score: this.score,
+                                pokemons: this.collectedPokemons.length,
+                                date: new Date().toISOString()
+                            });
+                            localStorage.setItem('rankings', JSON.stringify(rankings));
+                            if (window.router) {
+                                window.router.navigate('home');
+                            }
+                            break;
+                        case 'go_mini_game':
+                            // 미니게임 기능은 아직 구현하지 않음
+                            break;
                     }
-                } else {
-                    // 패배했을 때는 현재 스테이지 재시작
-                    this.collectedPokemons = []; // 재시작 시 포켓몬 컬렉션 초기화
-                    this.resetGame();
+                    break;
                 }
             }
         };
-        
-        this.canvas.addEventListener('click', buttonHandler);
+
+        this.canvas.addEventListener('click', handleClick);
     }
 
     resetGame() {
-        this.score = 0;
-        this.timeLeft = 60;
+        // 스테이지 변경 시에도 점수와 포켓몬 컬렉션, 볼 레벨 유지
+        this.timeLeft = 10;
         this.isGameOver = false;
         this.isGameOverHandled = false;
         this.gameResult = null;
@@ -647,11 +688,6 @@ class GamePage {
         this.ball.y = this.paddle.y - this.ball.radius;
         this.ball.dx = ballSpeed;
         this.ball.dy = -ballSpeed;
-        this.ball.level = 1;
-        this.ball.power = 1;
-    
-        // 포켓몬 컬렉션 초기화
-        this.collectedPokemons = [];
         
         // 스크롤 위치 초기화
         this.scrollX = 0;
@@ -857,7 +893,10 @@ class GamePage {
         const newLevel = Math.floor(this.score / 10) + 1;
         if (newLevel !== this.ball.level && newLevel <= 3) {
             this.ball.level = newLevel;
-            this.ball.power = newLevel === 3 ? 4 : newLevel; // 레벨 3일 때는 파워 4
+            this.ball.power = newLevel === 3 ? 4 : newLevel;
+            // 볼 레벨과 파워 저장
+            localStorage.setItem('ballLevel', this.ball.level.toString());
+            localStorage.setItem('ballPower', this.ball.power.toString());
         }
     }
 } 
