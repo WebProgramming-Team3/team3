@@ -753,9 +753,9 @@ class GamePage {
         this.context.fillRect(0, footerY, this.canvasWidth, this.footerHeight);
 
         // 정보 박스
-        const boxWidth = 350;
+        const boxWidth = 1300;
         const boxHeight = 100;
-        const boxX = this.canvasWidth - boxWidth - 20;
+        const boxX = this.canvasWidth - boxWidth - 120;
         const boxY = footerY + (this.footerHeight - boxHeight) / 2;
 
         // 둥근 모서리 박스 그리기
@@ -778,8 +778,8 @@ class GamePage {
             const startX = boxX + padding;
             const startY = boxY + (boxHeight - pokemonSize) / 2;
 
-            // 최대 5개까지만 표시
-            const displayCount = Math.min(5, this.collectedPokemons.length);
+            // 최대 18개까지만 표시
+            const displayCount = Math.min(18, this.collectedPokemons.length);
             
             for (let i = 0; i < displayCount; i++) {
                 const pokemon = this.collectedPokemons[i];
@@ -796,13 +796,13 @@ class GamePage {
             }
 
             // 더 많은 포켓몬이 있을 경우 +N 표시
-            if (this.collectedPokemons.length > 5) {
+            if (this.collectedPokemons.length > 18) {
                 this.context.font = '20px Bungee';
                 this.context.fillStyle = '#4F4F4F';
                 this.context.textAlign = 'left';
-                const plusX = startX + 5 * (pokemonSize + padding);
+                const plusX = startX + 18 * (pokemonSize + padding);
                 this.context.fillText(
-                    `+${this.collectedPokemons.length - 5}`,
+                    `+${this.collectedPokemons.length - 18}`,
                     plusX,
                     startY + pokemonSize/2
                 );
