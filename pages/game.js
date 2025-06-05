@@ -704,7 +704,9 @@ class GamePage {
                             }
                             break;
                         case 'go_mini_game':
-                            // 미니게임 기능은 아직 구현하지 않음
+                            if(window.router){
+                                window.router.navigate('minigame');
+                            }
                             break;
                     }
                     break;
