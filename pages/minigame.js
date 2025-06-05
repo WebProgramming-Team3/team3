@@ -9,6 +9,7 @@ class MiniGamePage {
         this.myScore = 0;      // 나의 점수
         this.opponentScore = 0; // 상대방 점수
         this.selectedChoice = null; // 선택된 가위바위보
+        this.selected = false; //선택 여부 저장
     }
 
     render() {
@@ -325,6 +326,7 @@ class MiniGamePage {
         rpsOptions.forEach(option => {
             option.addEventListener('click', (e) => {
                 this.selectRPSChoice(e.currentTarget);
+                this.opponentChoice();
             });
         });
     }
@@ -344,10 +346,20 @@ class MiniGamePage {
         //선택한 가위바위보 띄우기
         img.src = `assets/minigame/${this.selectedChoice}.png`;
         $(".circle-box.right-circle").append(img);
+        this.selected = true;
+
     }
 
-    getSelectedChoice() {
-        return this.selectedChoice;
+    opponentChoice(){
+        if(this.selected === true){
+            const rsp = {1:'rock', 2:'scissors', 3:'paper'};
+            let num = parseInt(Math.random()*3 + 1);
+            let key = rsp[num];
+            let img = document.createElement("img");
+            img.src = `assets/minigame/${key}.png`;
+            $(".circle-box.left-circle").append(img);
+            console.log("랜덤");
+        }
     }
 
     // 점수 업데이트 메서드들
