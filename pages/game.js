@@ -847,7 +847,7 @@ class GamePage {
     startTimer() {
         this.timerIntervalId = setInterval(() => {
             this.timeLeft -= 1;
-            if (this.timeLeft <= 0) {
+            if (this.timeLeft < 0) {
                 this.timeLeft = 0;
                 this.stopTimer();
                 if (!this.isGameOver) {  // 아직 게임오버되지 않았다면
