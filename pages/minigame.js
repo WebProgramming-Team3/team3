@@ -386,16 +386,35 @@ class MiniGamePage {
     score(){
         switch(this.opponentChoice()){
             case 'rock' : 
-                {if(this.selectedChoice == 'scissors') this.opponentScore++;
-                else if(this.selectedChoice == 'paper') this.myScore++;
+                {if(this.selectedChoice == 'scissors') {
+                    this.opponentScore++;
+                    document.querySelector(".game-box").innerHTML = '<img src=./assets/minigame/lose.png>';
+                    document.querySelector(".game-box").style.display = 'none';
+                }
+                else if(this.selectedChoice == 'paper') {
+                    this.myScore++
+                    document.querySelector(".game-box").innerHTML = '<img src=./assets/minigame/win.png>';
+                };
                 break;}
             case 'scissors' :
-                {if(this.selectedChoice == 'rock') this.myScore++;
-                 else if(this.selectedChoice == 'paper') this.opponentScore++;
+                {if(this.selectedChoice == 'rock') {
+                    this.myScore++
+                    document.querySelector(".game-box").innerHTML = '<img src=./assets/minigame/win.png>';
+                }
+                else if(this.selectedChoice == 'paper') {
+                    this.opponentScore++
+                    document.querySelector(".game-box").innerHTML = '<img src=./assets/minigame/lose.png>';
+                };
                 break;}
             case 'paper' :
-                {if(this.selectedChoice == 'rock') this.opponentScore++;
-                 else if(this.selectedChoice == 'scissors') this.myScore++;
+                {if(this.selectedChoice == 'rock') {
+                    this.opponentScore++
+                    document.querySelector(".game-box").innerHTML = '<img src=./assets/minigame/lose.png>';
+                }
+                 else if(this.selectedChoice == 'scissors') {
+                    this.myScore++;
+                    document.querySelector(".game-box").innerHTML = '<img src=./assets/minigame/win.png>';
+                }
                 break;}
         }
         this.updateMyScore(this.myScore);
