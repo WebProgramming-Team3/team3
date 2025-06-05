@@ -891,8 +891,8 @@ class GamePage {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
         }
-        let allImageKeys = this.collectedPokemons.map(pokemon => pokemon.imageKey);
-        return allImageKeys;
+        this.allImageKeys = this.collectedPokemons.map(pokemon => pokemon.imageKey);
+        localStorage.setItem("allImageKeys", JSON.stringify(this.collectedPokemons.map(p => p.imageKey)));
     }
 
     async mount(container) {
@@ -946,6 +946,7 @@ class GamePage {
             localStorage.setItem('ballPower', this.ball.power.toString());
         }
     }
-} 
+}
 //전역 등록
 window.GamePage = GamePage;
+const game = new GamePage();

@@ -1,8 +1,7 @@
-const game = new GamePage(); //game.js 접근
+var keys;
 class MiniGamePage {
     constructor() {
         // 미니게임 관련 변수들 초기화
-        this.gameData = null; // game.js에서 전달받을 데이터
         this.canvasWidth = 1440;
         this.canvasHeight = 1024;
         this.headerHeight = 181;
@@ -349,14 +348,14 @@ class MiniGamePage {
     
         // 이벤트 리스너 추가
         this.addEventListeners();
-        this.setGameData(game.stopGameLoop()); //"poke_lev1_1", "poke_lev2_3"
-        const w = game.stopGameLoop().length*100 + 30;
+        keys = JSON.parse(localStorage.getItem("allImageKeys"));
+        const w = keys.length*100 + 30;
         $(".pokemon-collection-box").css("width", `${w}px`);
 
         let img = null;
-        for(var i=0;i<this.gameData.length;i++){
+        for(var i=0;i<keys.length;i++){
             img = document.createElement("img");
-            img.src=`assets/pokemon/${this.gameData[i]}.png`;
+            img.src=`assets/pokemon/${keys[i]}.png`;
             var parent = document.querySelector(".collection-content");
             parent.append(img);
         }
@@ -375,12 +374,12 @@ class MiniGamePage {
                 //상대 이미지 랜덤 배정
                 $("#com").attr("src", `assets/pokemon/poke_lev${a}_${b}.png`);
                 //수집한 포켓몬 순서대로
-                $("#you").attr("src", `assets/pokemon/${this.gameData[i]}.png`);
+                $("#you").attr("src", `assets/pokemon/${keys[i]}.png`);
                 this.selectRPSChoice(e.currentTarget);
                 this.opponentChoice();
                 this.score();
                 i++;
-                if(i == this.gameData.length) this.ending();
+                if(i == keys.length) this.ending();
             });
         });
     }
@@ -447,11 +446,6 @@ class MiniGamePage {
             scoreElement.textContent = `SCORE ${this.opponentScore} : ${this.myScore}`;
             //  화면 배치상 (상대:나)가 직관적일 것 같아서 수정
         }
-    }
-
-    // game.js에서 데이터를 받아올 메서드
-    setGameData(data) {
-        this.gameData = data;
     }
 
     ending(){
