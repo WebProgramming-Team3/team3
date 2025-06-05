@@ -892,7 +892,6 @@ class GamePage {
             this.animationFrameId = null;
         }
         let allImageKeys = this.collectedPokemons.map(pokemon => pokemon.imageKey);
-        allImageKeys = ["poke_lev1_1", "poke_lev2_3"];
         return allImageKeys;
     }
 
