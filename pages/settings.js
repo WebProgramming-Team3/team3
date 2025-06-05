@@ -4,11 +4,6 @@ class SettingsPage {
     constructor() {
         this.container = null;
         this.styleElement = null;
-        this.settings = {
-            background: localStorage.getItem('background') || 'light',
-            sounds: localStorage.getItem('gameSounds') || 'on',
-            difficulty: localStorage.getItem('difficulty') || 'normal'
-        };
 
         // 상수 정의
         this.CONSTANTS = {
@@ -59,23 +54,17 @@ class SettingsPage {
                         <div class="option-item">
                             <div class="option-title-text">background</div>
                             <div class="option-buttons">
-                                <button id="bg-light-button" class="option-button ${this.settings.background === 'light' ? 'active' : ''}" data-type="background" data-value="${this.CONSTANTS.OPTION_LIGHT}">light</button>
+                                <button id="bg-light-button" class="option-button" data-type="background" data-value="${this.CONSTANTS.OPTION_LIGHT}">light</button>
                                 <span class="button-divider">/</span>
-                                <button id="bg-dark-button" class="option-button ${this.settings.background === 'dark' ? 'active' : ''}" data-type="background" data-value="${this.CONSTANTS.OPTION_DARK}">dark</button>
+                                <button id="bg-dark-button" class="option-button" data-type="background" data-value="${this.CONSTANTS.OPTION_DARK}">dark</button>
                             </div>
                         </div>
                         <div class="option-item">
                             <div class="option-title-text">sounds</div>
                             <div class="option-buttons">
-                                <button id="sounds-on-button" class="option-button ${this.settings.sounds === 'on' ? 'active' : ''}" data-type="sounds" data-value="${this.CONSTANTS.OPTION_ON}">on</button>
+                                <button id="sounds-on-button" class="option-button" data-type="sounds" data-value="${this.CONSTANTS.OPTION_ON}">on</button>
                                 <span class="button-divider">/</span>
-                                <button id="sounds-off-button" class="option-button ${this.settings.sounds === 'off' ? 'active' : ''}" data-type="sounds" data-value="${this.CONSTANTS.OPTION_OFF}">off</button>
-                            </div>
-                        </div>
-                        <div class="option-item">
-                            <div class="option-title-text">difficulty</div>
-                            <div class="option-buttons">
-                                <button id="difficulty-button" class="option-button" data-type="difficulty" data-value="${this.settings.difficulty}">${this.settings.difficulty}</button>
+                                <button id="sounds-off-button" class="option-button" data-type="sounds" data-value="${this.CONSTANTS.OPTION_OFF}">off</button>
                             </div>
                         </div>
                     </div>
@@ -90,122 +79,116 @@ class SettingsPage {
      */
     getStyles() {
         return `
-            @import url('https://fonts.googleapis.com/css2?family=Bungee:wght@400&display=swap');
-            
-            .settings-page {
-                position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-                display: flex; justify-content: center; align-items: center;
-                background-color: ${this.COLORS.PAGE_BG};
-                font-family: 'Bungee', cursive;
-            }
-            .settings-container {
-                position: relative; width: 1440px; height: 1024px;
-                display: flex; flex-direction: column; align-items: center; 
-                background-image: url('assets/background/background_setting.png');
-                background-size: cover; background-position: center;
-                overflow: hidden;
-            }
-            .settings-title {
-                margin-top: 60px;
-                margin-bottom: 80px;
-            }
-            .settings-title h1 {
-                font-size: 128px; font-weight: 400;
-                color: ${this.COLORS.TITLE_TEXT};
-                margin: 0; text-align: center;
-            }
-            .options-container {
-                display: flex; flex-direction: column; align-items: center;
-                width: 1000px;
-                gap: 50px;
-            }
-            .option-item {
-                display: flex; justify-content: space-between; align-items: center;
-                width: 100%;
-            }
-            .option-title-text {
-                width: 525px; height: 137px;
-                background-color: ${this.COLORS.OPTION_ITEM_BG};
-                border: 3px solid ${this.COLORS.OPTION_ITEM_BORDER};
-                border-radius: 20px;
-                display: flex; justify-content: center; align-items: center;
-                font-size: 64px; font-weight: 400;
-                color: ${this.COLORS.OPTION_TEXT};
-                box-sizing: border-box;
-            }
-            .option-buttons {
-                display: flex; align-items: center; justify-content: center;
-                width: 385px; height: 137px;
-                background-color: ${this.COLORS.OPTION_ITEM_BG};
-                border: 3px solid ${this.COLORS.OPTION_ITEM_BORDER};
-                border-radius: 20px;
-                padding: 0 15px;
-                box-sizing: border-box;
-            }
-            .difficulty-buttons {
-                width: 385px;
-                display: flex;
-                justify-content: space-between;
-                padding: 0 20px;
-            }
-            .option-button {
-                font-family: 'Bungee', cursive; font-size: 48px; font-weight: 400;
-                color: ${this.COLORS.OPTION_TEXT};
-                background-color: transparent; border: none;
-                cursor: pointer; padding: 10px;
-                transition: color 0.3s ease;
-            }
-            .option-button.active {
-                color: ${this.COLORS.OPTION_ACTIVE_TEXT};
-            }
-            .button-divider {
-                font-family: 'Bungee', cursive; font-size: 48px;
-                color: ${this.COLORS.OPTION_TEXT};
-                margin: 0 5px;
-            }
-            .settings-back-button {
-                position: absolute;
-                bottom: 50px; left: 50%; transform: translateX(-50%);
-                padding: 10px 20px; font-size: 24px;
-                font-family: 'Do Hyeon', sans-serif;
-                background-color: ${this.COLORS.BACK_BUTTON_BG}; color: ${this.COLORS.BACK_BUTTON_TEXT};
-                border: none; border-radius: 10px; cursor: pointer;
-                height: 60px;
-                transition: background-color 0.2s ease;
-            }
-            .settings-back-button:hover {
-                background-color: ${this.COLORS.BACK_BUTTON_HOVER_BG};
-            }
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Bungee&family=Do+Hyeon&display=swap');
+                
+                .settings-page {
+                    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+                    display: flex; justify-content: center; align-items: center;
+                    background-color: ${this.COLORS.PAGE_BG};
+                    font-family: 'Bungee', cursive;
+                }
+                .settings-container {
+                    position: relative; width: 1440px; height: 1024px; /* Figma 기준 전체 프레임 */
+                    display: flex; flex-direction: column; align-items: center; 
+                    background-image: url('assets/background/background_setting.png');
+                    background-size: cover; background-position: center;
+                    overflow: hidden; /* 스케일링 시 내용 잘림 방지 */
+                }
+                .settings-title {
+                    margin-top: 60px; /* 상단 여백 */
+                    margin-bottom: 80px; /* 옵션과의 간격 */
+                }
+                .settings-title h1 {
+                    font-size: 128px; font-weight: 400;
+                    color: ${this.COLORS.TITLE_TEXT};
+                    margin: 0; text-align: center;
+                }
+                .options-container {
+                    display: flex; flex-direction: column; align-items: center;
+                    width: 1000px; /* Figma 기준 options-container 너비 */
+                    gap: 50px; /* 옵션 아이템 간 간격 */
+                }
+                .option-item {
+                    display: flex; justify-content: space-between; align-items: center;
+                    width: 100%;
+                }
+                .option-title-text {
+                    width: 525px; height: 137px;
+                    background-color: ${this.COLORS.OPTION_ITEM_BG};
+                    border: 3px solid ${this.COLORS.OPTION_ITEM_BORDER};
+                    border-radius: 20px;
+                    display: flex; justify-content: center; align-items: center;
+                    font-size: 64px; font-weight: 400;
+                    color: ${this.COLORS.OPTION_TEXT};
+                    box-sizing: border-box;
+                }
+                .option-buttons {
+                    display: flex; align-items: center; justify-content: center;
+                    width: 385px; height: 137px;
+                    background-color: ${this.COLORS.OPTION_ITEM_BG};
+                    border: 3px solid ${this.COLORS.OPTION_ITEM_BORDER};
+                    border-radius: 20px;
+                    padding: 0 15px;
+                    box-sizing: border-box;
+                }
+                .option-button {
+                    font-family: 'Bungee', cursive; font-size: 48px; font-weight: 400;
+                    color: ${this.COLORS.OPTION_TEXT};
+                    background-color: transparent; border: none;
+                    cursor: pointer; padding: 10px;
+                }
+                .option-button.active {
+                    color: ${this.COLORS.OPTION_ACTIVE_TEXT};
+                }
+                .button-divider {
+                    font-family: 'Bungee', cursive; font-size: 48px;
+                    color: ${this.COLORS.OPTION_TEXT};
+                    margin: 0 5px;
+                }
+                .settings-back-button {
+                    position: absolute; /* settings-container 기준 */
+                    bottom: 50px; left: 50%; transform: translateX(-50%);
+                    padding: 10px 20px; font-size: 24px;
+                    font-family: 'Do Hyeon', sans-serif;
+                    background-color: ${this.COLORS.BACK_BUTTON_BG}; color: ${this.COLORS.BACK_BUTTON_TEXT};
+                    border: none; border-radius: 10px; cursor: pointer;
+                    height: 60px;
+                    transition: background-color 0.2s ease;
+                }
+                .settings-back-button:hover {
+                    background-color: ${this.COLORS.BACK_BUTTON_HOVER_BG};
+                }
 
-            /* 반응형 스케일링 */
-            @media (max-width: 1440px) {
-                .settings-container { transform: scale(calc(100vw / 1440)); transform-origin: top left; }
-            }
-            @media (max-height: 1024px) {
-                .settings-container { transform: scale(calc(100vh / 1024)); transform-origin: top left; }
-            }
-            @media (max-width: 768px) {
-                .settings-container { transform: scale(0.5); transform-origin: top left; }
-                .settings-title h1 { font-size: min(15vw, 80px); }
-                .option-title-text { font-size: min(8vw, 40px); width: 65%; height: 100px;}
-                .option-buttons { font-size: min(6vw, 30px); width: 30%; height: 100px;}
-                .option-button {font-size: min(6vw, 30px);}
-                .button-divider {font-size: min(6vw, 30px);}
-                .settings-back-button {font-size:min(4vw, 18px); height: 45px; bottom: 30px;}
-                .options-container{gap:30px; margin-bottom:30px;}
-            }
+                /* 반응형 스케일링 */
+                @media (max-width: 1440px) {
+                    .settings-container { transform: scale(calc(100vw / 1440)); transform-origin: top left; }
+                }
+                @media (max-height: 1024px) {
+                    .settings-container { transform: scale(calc(100vh / 1024)); transform-origin: top left; }
+                }
+                 @media (max-width: 768px) {
+                    .settings-container { transform: scale(0.5); transform-origin: top left; }
+                    .settings-title h1 { font-size: min(15vw, 80px); }
+                    .option-title-text { font-size: min(8vw, 40px); width: 65%; height: 100px;}
+                    .option-buttons { font-size: min(6vw, 30px); width: 30%; height: 100px;}
+                    .option-button {font-size: min(6vw, 30px);}
+                    .button-divider {font-size: min(6vw, 30px);}
+                    .settings-back-button {font-size:min(4vw, 18px); height: 45px; bottom: 30px;}
+                    .options-container{gap:30px; margin-bottom:30px;}
+                }
+            </style>
         `;
     }
 
     /**
      * 페이지 마운트 후 초기화
      */
-    async mount(container) {
-        this.container = container;
-        this.container.innerHTML = this.render();
+    async mount() {
+        this.container = document.querySelector('.settings-page');
         
-        this.styleElement = document.createElement('style');
-        this.styleElement.textContent = this.getStyles();
+        this.styleElement = document.createElement('div');
+        this.styleElement.innerHTML = this.getStyles();
         document.head.appendChild(this.styleElement);
 
         // DOM 요소 캐싱
@@ -215,7 +198,9 @@ class SettingsPage {
         this.soundsOffButton = document.getElementById('sounds-off-button');
         this.backToHomeButton = document.getElementById('back-to-home-button');
 
+        this.loadSettings();
         this.setupEventListeners();
+        this.updateUI();
     }
 
     /**
@@ -223,49 +208,14 @@ class SettingsPage {
      */
     setupEventListeners() {
         // 옵션 버튼들에 대한 공통 이벤트 리스너
-        const optionButtons = document.querySelectorAll('.option-button:not(#difficulty-button)');
+        const optionButtons = document.querySelectorAll('.option-button');
         optionButtons.forEach(button => {
             button.addEventListener('click', (event) => {
                 const type = event.target.dataset.type;
                 const value = event.target.dataset.value;
-                
-                // 같은 타입의 모든 버튼에서 active 클래스 제거
-                document.querySelectorAll(`[data-type="${type}"]`).forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                
-                // 클릭된 버튼에 active 클래스 추가
-                event.target.classList.add('active');
-                
-                // 설정 저장
-                this.settings[type] = value;
-                localStorage.setItem(type === 'sounds' ? this.CONSTANTS.SOUNDS_OPTION_KEY : type, value);
-                
-                // background 설정 변경 시 정적 속성도 업데이트
-                if (type === 'background') {
-                    SettingsPage.currentBackgroundSetting = value;
-                }
+                this.handleOptionChange(type, value);
             });
         });
-
-        // 난이도 버튼 이벤트 리스너
-        const difficultyButton = document.getElementById('difficulty-button');
-        if (difficultyButton) {
-            difficultyButton.addEventListener('click', () => {
-                const difficulties = ['easy', 'normal', 'hard'];
-                const currentIndex = difficulties.indexOf(this.settings.difficulty);
-                const nextIndex = (currentIndex + 1) % difficulties.length;
-                const nextDifficulty = difficulties[nextIndex];
-                
-                // 버튼 텍스트와 value 업데이트
-                difficultyButton.textContent = nextDifficulty;
-                difficultyButton.dataset.value = nextDifficulty;
-                
-                // 설정 저장
-                this.settings.difficulty = nextDifficulty;
-                localStorage.setItem('difficulty', nextDifficulty);
-            });
-        }
 
         if (this.backToHomeButton) {
             this.backToHomeButton.addEventListener('click', () => {
@@ -275,7 +225,7 @@ class SettingsPage {
     }
     
     /**
-     * 홈으로 이동
+     * 홈으로 이동 (다른 페이지와 일관성)
      */
     navigateToHome() {
         if (window.router) {
@@ -293,26 +243,52 @@ class SettingsPage {
         }
     }
 
+    // 설정 변경 처리
+    handleOptionChange(type, value) {
+        if (type === 'background') {
+            this.backgroundOption = value;
+            SettingsPage.currentBackgroundSetting = value; // 정적 속성 업데이트
+        } else if (type === 'sounds') {
+            this.soundsOption = value;
+            localStorage.setItem(this.CONSTANTS.SOUNDS_OPTION_KEY, value);
+        }
+        this.updateUI();
+    }
+
+    // UI 업데이트 (버튼 활성화 및 실제 설정 적용)
+    updateUI() {
+        const gameContainer = document.getElementById('app');
+        if (gameContainer) {
+            if (this.backgroundOption === this.CONSTANTS.OPTION_DARK) {
+                gameContainer.classList.add('dark-mode');
+                gameContainer.classList.remove('light-mode');
+            } else {
+                gameContainer.classList.add('light-mode');
+                gameContainer.classList.remove('dark-mode');
+            }
+        }
+        
+        // 버튼 활성 상태 업데이트
+        if(this.bgLightButton) this.bgLightButton.classList.toggle('active', this.backgroundOption === this.CONSTANTS.OPTION_LIGHT);
+        if(this.bgDarkButton) this.bgDarkButton.classList.toggle('active', this.backgroundOption === this.CONSTANTS.OPTION_DARK);
+        if(this.soundsOnButton) this.soundsOnButton.classList.toggle('active', this.soundsOption === this.CONSTANTS.OPTION_ON);
+        if(this.soundsOffButton) this.soundsOffButton.classList.toggle('active', this.soundsOption === this.CONSTANTS.OPTION_OFF);
+    }
+
+    // 저장된 설정 불러오기
+    loadSettings() {
+        // 배경 설정은 localStorage에서 불러오지 않고, 현재 세션의 정적 속성 값을 사용
+        this.backgroundOption = SettingsPage.currentBackgroundSetting;
+        this.soundsOption = localStorage.getItem(this.CONSTANTS.SOUNDS_OPTION_KEY) || this.CONSTANTS.OPTION_ON;
+    }
+
     // --- 정적 메서드 추가 ---
     /**
      * 현재 세션의 배경 설정을 가져옴
      * @returns {string} 'light' 또는 'dark'
      */
     static getBackgroundSetting() {
+        // localStorage 대신 정적 속성 값을 반환
         return SettingsPage.currentBackgroundSetting;
-    }
-
-    static setBackground(value) {
-        localStorage.setItem('background', value);
-        window.location.reload();
-    }
-
-    static getDifficulty() {
-        return localStorage.getItem('difficulty') || 'normal';
-    }
-
-    static setDifficulty(value) {
-        localStorage.setItem('difficulty', value);
-        window.location.reload();
     }
 } 
