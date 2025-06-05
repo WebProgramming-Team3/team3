@@ -29,7 +29,8 @@ class MiniGamePage {
                 <!-- 메인 게임 영역 -->
                 <div class="minigame-content">
                     <div class="game-area">
-                        <div class="circle-box left-circle"></div>
+                        <div class="circle-box left-circle"><img id="com"></div>
+                        <div id="opponent"><img></div>
                         <div class="game-box">
                             <div class="rps-selection">
                                 <div class="rps-option" data-choice="scissors">
@@ -45,7 +46,8 @@ class MiniGamePage {
                                 </div>
                             </div>
                         </div>
-                        <div class="circle-box right-circle"></div>
+                        <div class="circle-box right-circle"><img id="you"></div>
+                        <div id="i"><img></div>
                     </div>
                 </div>
                 
@@ -304,6 +306,18 @@ class MiniGamePage {
                 overflow: hidden;
                 background: #FFFFFF;
             }
+            #i{
+                position:absolute;
+                right : 190px;
+                bottom : 100px;
+                width:70px; height:70px;
+            }
+            #opponent{
+                position:absolute;
+                left : 110px;
+                bottom : 100px;
+                width:70px; height:70px;
+            }
         `;
     }
 
@@ -315,13 +329,7 @@ class MiniGamePage {
         this.styleElement = document.createElement('style');
         this.styleElement.textContent = this.getStyles();
         document.head.appendChild(this.styleElement);
-        
-        let img1 = document.createElement("img");
-        $(".circle-box.left-circle").append(img1);
-        let img2 = document.createElement("img");
-        img2.id = 'you';
-        $(".circle-box.right-circle").append(img2);
-
+    
         // 이벤트 리스너 추가
         this.addEventListeners();
     }
@@ -334,7 +342,6 @@ class MiniGamePage {
                 this.selectRPSChoice(e.currentTarget);
                 this.opponentChoice();
                 this.score();
-                console.log(this.opponentChoice(), this.selectedChoice);
             });
         });
     }
@@ -350,7 +357,7 @@ class MiniGamePage {
         // 선택된 값 저장
         this.selectedChoice = selectedOption.dataset.choice;
         //선택한 가위바위보 띄우기
-        $("#you").attr("src", `assets/minigame/${this.selectedChoice}.png`);
+        $("#i img").attr("src", `assets/minigame/selected_${this.selectedChoice}.png`);
         this.selected = true;
     }
 
@@ -359,7 +366,7 @@ class MiniGamePage {
             const rsp = {1:'rock', 2:'scissors', 3:'paper'};
             let num = parseInt(Math.random()*3 + 1);
             let key = rsp[num];
-            $(".circle-box.left-circle img").attr("src", `assets/minigame/${key}.png`);
+            $("#opponent img").attr("src", `assets/minigame/selected_${key}.png`);
             return key;
         }
     }
