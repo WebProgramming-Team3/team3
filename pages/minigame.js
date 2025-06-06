@@ -339,7 +339,8 @@ class MiniGamePage {
             }
             #go-home-button{
                 position : absolute;
-                margin : 0 auto;
+                left : 50%;
+                transform : translate(-50%, -50%);
                 display : block;
                 bottom : 10px;
             }
@@ -397,7 +398,6 @@ class MiniGamePage {
                 //수집한 포켓몬 순서대로
                 $("#you").attr("src", `assets/pokemon/${keys[i]}.png`);
                 this.selectRPSChoice(e.currentTarget);
-                this.opponentChoice();
                 this.score();
                 i++;
                 if(i == keys.length) this.ending();
@@ -474,7 +474,6 @@ class MiniGamePage {
             document.querySelector(".game-box").innerHTML = '<img src=./assets/minigame/lose.png>';
          //화면 어두워짐
             document.body.insertAdjacentHTML('beforeend', '<div id="overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0, 0, 0, 0.17);z-index:7000;"></div>');
-            this.done = true;
         }
         else {
             document.body.insertAdjacentHTML('beforeend', '<div id="overlay" class="center-wrapper" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0, 0, 0, 0.17);z-index:7000;"></div>');
@@ -494,8 +493,9 @@ class MiniGamePage {
                 const r = Math.random()*8;
                 let text = document.createElement("div");
                 text.id = 'text'; 
-                if(!this.done){
-                    if(document.querySelector("#overlay") != null)document.querySelector("#overlay").appendChild(text);
+                const overlay = document.querySelector("#overlay");
+                if(!this.done && !overlay){
+                    overlay.appendChild(text);
                     if(r>7) text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“설계도 뒷면에 이런 메모가 적혀 있었다:<br>"피카츄는 사실 케첩을 정말 좋아한다!"”';
                     else if(r>6) text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“전설의 트레이너가 남긴 한마디:<br>‘잠만보를 깨우려면 맛있는 음식이 필요해!’”';
                     else if(r>5) text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“설계도를 펼치자, 숨겨진 비밀 메시지가 나타난다:<br>‘리자몽의 날개는 엄청 뜨겁다!’”';
@@ -510,7 +510,6 @@ class MiniGamePage {
         }
         let goHome = document.createElement("img"); goHome.id = 'go-home-button';
         goHome.src = './assets/utils/go_home.png';
-
         if(!this.done){
             document.querySelector("#overlay").appendChild(goHome);
             goHome.addEventListener('click', () => {
