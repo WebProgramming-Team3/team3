@@ -10,6 +10,7 @@ class MiniGamePage {
         this.opponentScore = 0; // 상대방 점수
         this.selectedChoice = null; // 선택된 가위바위보
         this.selected = false; //선택 여부 저장
+        this.done = false;
     }
 
     render() {
@@ -325,9 +326,11 @@ class MiniGamePage {
             #text{
                 font-family : 'Do Hyeon', sans-serif;
                 font-size : 45px;
+                margin : auto;
                 position : absolute;
-                top : 380px;
-                left : 600px;
+                height : 90px;
+                top: 35%;left: 50%;
+                transform: translate(-50%, -50%);
                 z-index : 9999;
                 width : 800px;
                 color :rgb(114, 80, 11);
@@ -336,7 +339,21 @@ class MiniGamePage {
             }
             #go-home-button{
                 position : absolute;
+                margin : 0 auto;
+                display : block;
                 bottom : 10px;
+            }
+            #end{
+                position : absolute;
+                top : 50%; left : 50%;
+                transform : translate(-50%, -50%);
+                }
+            .center-wrapper {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh; /* 뷰포트 높이만큼 */
+                position : relative;
             }
         `;
     }
@@ -456,27 +473,29 @@ class MiniGamePage {
         if(this.myScore <= this.opponentScore){
             document.querySelector(".game-box").innerHTML = '<img src=./assets/minigame/lose.png>';
          //화면 어두워짐
-            document.body.insertAdjacentHTML('beforeend', '<div id="overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0, 0, 0, 0.17);z-index:7000;"></div>');}
-        else {
             document.body.insertAdjacentHTML('beforeend', '<div id="overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0, 0, 0, 0.17);z-index:7000;"></div>');
+            this.done = true;
+        }
+        else {
+            document.body.insertAdjacentHTML('beforeend', '<div id="overlay" class="center-wrapper" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0, 0, 0, 0.17);z-index:7000;"></div>');
             document.querySelector(".game-box").innerHTML = '<img src=./assets/minigame/win.png>';
-              
+            
             let img = document.createElement("img");
             img.src = './assets/minigame/rps_end.png'; img.id = 'end';
-            img.style.position = 'absolute'; img.style.zIndex = '7000';
-            img.style.left = '670px'; img.style.bottom = '70px';
-            document.body.appendChild(img);
-
+            img.style.zIndex = '7100';
+            document.querySelector("#overlay").appendChild(img);
             // 클릭하면 이미지 변경 + 위치 이동
-            let done = false;
             document.querySelector("#overlay").addEventListener("click", () => {
                 img.src = './assets/minigame/ending_box.png';
-                img.style.left = '500px'; img.style.bottom = '250px';
+                img.style.height = '450px';
+                img.style.left = '50%'; img.style.bottom = '50%';
+                img.style.transform = 'translate(-50%, -50%)';
                 //글귀 랜덤
                 const r = Math.random()*8;
-                let text = document.createElement("div"); text.id = 'text';
-                if(!done){
-                    document.body.appendChild(text);
+                let text = document.createElement("div");
+                text.id = 'text'; 
+                if(!this.done){
+                    document.querySelector("#overlay").appendChild(text);
                     if(r>7) text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“설계도 뒷면에 이런 메모가 적혀 있었다:<br>"피카츄는 사실 케첩을 정말 좋아한다!"”';
                     else if(r>6) text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“전설의 트레이너가 남긴 한마디:<br>‘잠만보를 깨우려면 맛있는 음식이 필요해!’”';
                     else if(r>5) text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“설계도를 펼치자, 숨겨진 비밀 메시지가 나타난다:<br>‘리자몽의 날개는 엄청 뜨겁다!’”';
@@ -485,18 +504,19 @@ class MiniGamePage {
                     else if(r>2) text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“가위바위보에서 이긴 당신, 오늘 하루는 ‘행운의 날’!”';
                     else if(r>1) text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“설계도에는 이런 낙서도 있었어요:<br>‘가위바위보는 결국 운이다... by 전설의 트레이너’”';
                     else text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“연구소에 남아 있는 쪽지:<br>‘설계도 그리느라 밤샜다…’”';
-                    done = true;
+                    this.done = true;
                 }
             });
         }
         let goHome = document.createElement("img"); goHome.id = 'go-home-button';
         goHome.src = './assets/utils/go_home.png';
-        const left = (window.innerWidth - 323)/2;
-        goHome.style.left = `${left}px`;
-        document.querySelector("#overlay").appendChild(goHome);
-        goHome.addEventListener('click', () => {
-            window.router.navigate('home');
-        });
+
+        if(!this.done){
+            document.querySelector("#overlay").appendChild(goHome);
+            goHome.addEventListener('click', () => {
+                window.router.navigate('home');
+            });
+        }
     }
     
     unmount() {
@@ -509,10 +529,7 @@ class MiniGamePage {
         this.container = null;
         this.styleElement = null;
         const overlay = document.querySelector("#overlay");
-        const text = document.querySelector("#text");
-        const end = document.querySelector("#end");
         document.body.removeChild(overlay);
-        if(text !== null) document.body.removeChild(text);
-        if(end !== null) document.body.removeChild(end);
+        this.done = false;
     }
 } 
