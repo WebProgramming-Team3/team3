@@ -495,7 +495,7 @@ class MiniGamePage {
                 let text = document.createElement("div");
                 text.id = 'text'; 
                 if(!this.done){
-                    document.querySelector("#overlay").appendChild(text);
+                    if(document.querySelector("#overlay") != null)document.querySelector("#overlay").appendChild(text);
                     if(r>7) text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“설계도 뒷면에 이런 메모가 적혀 있었다:<br>"피카츄는 사실 케첩을 정말 좋아한다!"”';
                     else if(r>6) text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“전설의 트레이너가 남긴 한마디:<br>‘잠만보를 깨우려면 맛있는 음식이 필요해!’”';
                     else if(r>5) text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“설계도를 펼치자, 숨겨진 비밀 메시지가 나타난다:<br>‘리자몽의 날개는 엄청 뜨겁다!’”';
