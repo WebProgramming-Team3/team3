@@ -334,6 +334,10 @@ class MiniGamePage {
                 text-align : center;
                 line-height : 90px;
             }
+            #go-home-button{
+                position : absolute;
+                bottom : 10px;
+            }
         `;
     }
 
@@ -449,14 +453,16 @@ class MiniGamePage {
     }
 
     ending(){
-        if(this.myScore < this.opponentScore)
+        if(this.myScore < this.opponentScore){
             document.querySelector(".game-box").innerHTML = '<img src=./assets/minigame/lose.png>';
+         //화면 어두워짐
+            document.body.insertAdjacentHTML('beforeend', '<div id="overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0, 0, 0, 0.17);z-index:7000;"></div>');}
         else {
-              document.querySelector(".game-box").innerHTML = '<img src=./assets/minigame/win.png>';
-             //화면 어두워짐
             document.body.insertAdjacentHTML('beforeend', '<div id="overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0, 0, 0, 0.17);z-index:7000;"></div>');
+            document.querySelector(".game-box").innerHTML = '<img src=./assets/minigame/win.png>';
+              
             let img = document.createElement("img");
-            img.src = './assets/minigame/rps_end.png';
+            img.src = './assets/minigame/rps_end.png'; img.id = 'end';
             img.style.position = 'absolute'; img.style.zIndex = '7000';
             img.style.left = '670px'; img.style.bottom = '70px';
             document.body.appendChild(img);
@@ -483,6 +489,14 @@ class MiniGamePage {
                 }
             });
         }
+        let goHome = document.createElement("img"); goHome.id = 'go-home-button';
+        goHome.src = './assets/utils/go_home.png';
+        const left = (window.innerWidth - 323)/2;
+        goHome.style.left = `${left}px`;
+        document.querySelector("#overlay").appendChild(goHome);
+        goHome.addEventListener('click', () => {
+            window.router.navigate('home');
+        });
     }
     
     unmount() {
@@ -494,5 +508,11 @@ class MiniGamePage {
         }
         this.container = null;
         this.styleElement = null;
+        const overlay = document.querySelector("#overlay");
+        const text = document.querySelector("#text");
+        const end = document.querySelector("#end");
+        document.body.removeChild(overlay);
+        if(text !== null) document.body.removeChild(text);
+        if(end !== null) document.body.removeChild(end);
     }
 } 
