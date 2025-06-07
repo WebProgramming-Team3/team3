@@ -492,9 +492,9 @@ class MiniGamePage {
                 //글귀 랜덤
                 const r = Math.random()*8;
                 let text = document.createElement("div");
-                text.id = 'text'; 
+                text.id = 'text';
                 const overlay = document.querySelector("#overlay");
-                if(!this.done && !overlay){
+                if((!this.done) && (overlay != null)){
                     overlay.appendChild(text);
                     if(r>7) text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“설계도 뒷면에 이런 메모가 적혀 있었다:<br>"피카츄는 사실 케첩을 정말 좋아한다!"”';
                     else if(r>6) text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“전설의 트레이너가 남긴 한마디:<br>‘잠만보를 깨우려면 맛있는 음식이 필요해!’”';
