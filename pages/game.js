@@ -668,6 +668,19 @@ class GamePage {
             for (const button of this.endGameButtons) {
                 if (clickX >= button.x && clickX <= button.x + button.width &&
                     clickY >= button.y && clickY <= button.y + button.height) {
+
+                    if(button.action == 'go_mini_game'){
+                        if(a == 0) {
+                            alert('포획된 포켓몬이 없어 미니게임으로 넘어갈 수 없습니다.');
+                            continue;
+                        }
+                        else{
+                            if(window.router){
+                                window.router.navigate('minigame'); //미니게임으로 이동
+                            }
+                            break;
+                        }
+                    }
                     
                     // 클릭 이벤트 리스너 제거
                     this.canvas.removeEventListener('click', handleClick);
@@ -689,11 +702,6 @@ class GamePage {
                             localStorage.setItem('rankings', JSON.stringify(rankings));
                             if (window.router) {
                                 window.router.navigate('ranking');
-                            }
-                            break;
-                        case 'go_mini_game':
-                            if(window.router){
-                                window.router.navigate('minigame'); //미니게임으로 이동
                             }
                             break;
                     }
