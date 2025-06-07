@@ -670,7 +670,7 @@ class GamePage {
                     clickY >= button.y && clickY <= button.y + button.height) {
 
                     if(button.action == 'go_mini_game'){
-                        if(a == 0) {
+                        if(this.collectedPokemons.length == 0) {
                             alert('포획된 포켓몬이 없어 미니게임으로 넘어갈 수 없습니다.');
                             continue;
                         }
