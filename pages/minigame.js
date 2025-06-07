@@ -470,12 +470,12 @@ class MiniGamePage {
     }
 
     ending(){
-        if(this.myScore <= this.opponentScore){
+        /*if(this.myScore <= this.opponentScore){
             document.querySelector(".game-box").innerHTML = '<img src=./assets/minigame/lose.png>';
          //화면 어두워짐
             document.body.insertAdjacentHTML('beforeend', '<div id="overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0, 0, 0, 0.17);z-index:7000;"></div>');
         }
-        else {
+        else*/ {
             document.body.insertAdjacentHTML('beforeend', '<div id="overlay" class="center-wrapper" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0, 0, 0, 0.17);z-index:7000;"></div>');
             document.querySelector(".game-box").innerHTML = '<img src=./assets/minigame/win.png>';
             
@@ -485,27 +485,11 @@ class MiniGamePage {
             document.querySelector("#overlay").appendChild(img);
             // 클릭하면 이미지 변경 + 위치 이동
             document.querySelector("#overlay").addEventListener("click", () => {
-                img.src = './assets/minigame/ending_box.png';
+                img.src = './assets/minigame/ending_box_text.png';
                 img.style.height = '450px';
                 img.style.left = '50%'; img.style.bottom = '50%';
                 img.style.transform = 'translate(-50%, -50%)';
-                //글귀 랜덤
-                const r = Math.random()*8;
-                let text = document.createElement("div");
-                text.id = 'text';
-                const overlay = document.querySelector("#overlay");
-                if((!this.done) && (overlay != null)){
-                    overlay.appendChild(text);
-                    if(r>7) text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“설계도 뒷면에 이런 메모가 적혀 있었다:<br>"피카츄는 사실 케첩을 정말 좋아한다!"”';
-                    else if(r>6) text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“전설의 트레이너가 남긴 한마디:<br>‘잠만보를 깨우려면 맛있는 음식이 필요해!’”';
-                    else if(r>5) text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“설계도를 펼치자, 숨겨진 비밀 메시지가 나타난다:<br>‘리자몽의 날개는 엄청 뜨겁다!’”';
-                    else if(r>4) text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“오늘의 포켓몬 운세:<br>‘포켓몬처럼 용감하게 도전한다면, 좋은 일이 생길 거예요!’”';
-                    else if(r>3) text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“전설의 설계도가 말한다:<br>‘당신의 모험은 이제 시작입니다!’”';
-                    else if(r>2) text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“가위바위보에서 이긴 당신, 오늘 하루는 ‘행운의 날’!”';
-                    else if(r>1) text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“설계도에는 이런 낙서도 있었어요:<br>‘가위바위보는 결국 운이다... by 전설의 트레이너’”';
-                    else text.innerHTML = '"포켓몬 금기록(禁記錄)”<br>“연구소에 남아 있는 쪽지:<br>‘설계도 그리느라 밤샜다…’”';
-                    this.done = true;
-                }
+                this.done = true;
             });
         }
         let goHome = document.createElement("img"); goHome.id = 'go-home-button';
