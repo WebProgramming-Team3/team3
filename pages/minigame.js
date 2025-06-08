@@ -23,7 +23,7 @@ class MiniGamePage {
                 <div class="minigame-header">
                     <div class="stage-text">MINI GAME</div>
                     <div class="header-box score-box">
-                        <span>SCORE ${this.myScore} : ${this.opponentScore}</span>
+                        <span>SCORE ${this.opponentScore} : ${this.myScore}</span>
                     </div>
                 </div>
                 
