@@ -470,12 +470,12 @@ class MiniGamePage {
     }
 
     ending(){
-        /*if(this.myScore <= this.opponentScore){
+        if(this.myScore <= this.opponentScore){
             document.querySelector(".game-box").innerHTML = '<img src=./assets/minigame/lose.png>';
          //화면 어두워짐
             document.body.insertAdjacentHTML('beforeend', '<div id="overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0, 0, 0, 0.17);z-index:7000;"></div>');
         }
-        else*/ {
+        else {
             document.body.insertAdjacentHTML('beforeend', '<div id="overlay" class="center-wrapper" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0, 0, 0, 0.17);z-index:7000;"></div>');
             document.querySelector(".game-box").innerHTML = '<img src=./assets/minigame/win.png>';
             
