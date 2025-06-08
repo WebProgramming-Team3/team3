@@ -1,28 +1,27 @@
-
 class HowToPlayPage {
-    constructor() {
-        this.container = null;
-        this.styleElement = null;
-        
-        // 스타일 색상 상수
-        this.COLORS = {
-            BACKGROUND: '#ffffff',
-            CONTENT_BOX_BG: 'rgba(255, 255, 255, 0.9)',
-            CONTENT_BOX_BORDER: '#60cd52',
-            TITLE_COLOR: '#4a4a4a',
-            SECTION_TITLE_COLOR: '#333333',
-            SECTION_TEXT_COLOR: '#000000',
-            BUTTON_BG: '#60cd52',
-            BUTTON_HOVER_BG: '#4aa040',
-            BUTTON_TEXT: '#ffffff'
-        };
-    }
+  constructor() {
+    this.container = null;
+    this.styleElement = null;
 
-    /**
-     * 페이지 렌더링
-     */
-    render() {
-        return `
+    // 스타일 색상 상수
+    this.COLORS = {
+      BACKGROUND: "#ffffff",
+      CONTENT_BOX_BG: "rgba(255, 255, 255, 0.9)",
+      CONTENT_BOX_BORDER: "#60cd52",
+      TITLE_COLOR: "#4a4a4a",
+      SECTION_TITLE_COLOR: "#333333",
+      SECTION_TEXT_COLOR: "#000000",
+      BUTTON_BG: "#60cd52",
+      BUTTON_HOVER_BG: "#4aa040",
+      BUTTON_TEXT: "#ffffff",
+    };
+  }
+
+  /**
+   * 페이지 렌더링
+   */
+  render() {
+    return `
             <div class="how-to-play-page" id="how-to-play-page">
                 <div class="how-to-play-container">
                     <div class="how-to-play-title">
@@ -35,40 +34,40 @@ class HowToPlayPage {
                         </div>
                         <div class="content-section">
                             <h2>🎯 목표</h2>
-                            <p>제한 시간 60초 안에 가능한 많은 <br>포켓몬 벽돌을 부수고 점수를 모으세요!<br>벽돌을 부수면 포켓몬을 수집할 수 있어요.<br>3개의 목숨이 다하면 게임 오버!</p>
+                            <p>제한 시간 60초 안에 가능한 많은 <br>포켓몬 벽돌을 부수고 점수를 모으세요!<br>벽돌을 부수면 포켓몬을 수집할 수 있어요.<br>공이 땅에 닿으면 게임 오버!</p>
                         </div>
                         <div class="content-section">
                             <h2>🧱 벽돌</h2>
                             <p>레벨에 따라 부서지는 횟수가 달라요!<br>
                                 💠레벨 1: 1번 맞으면 부서짐<br>
-                                💠레벨 2: 1번 맞으면 부서짐<br>
-                                💠레벨 3: 1번 맞으면 부서짐
+                                💠레벨 2: 2번 맞으면 부서짐<br>
+                                💠레벨 3: 4번 맞으면 부서짐
                             </p>
                         </div>
                         <div class="content-section">
                             <h2>⚽ 공(몬스터볼)</h2>
-                            <p>점수가 오를수록 더 강력한 몬스터볼로 업그레이드돼요!<br>레벨이 올라갈수록 더 강한 공격력을 가집니다.</p>
+                            <p>점수가 오를수록 더 강력한 몬스터볼로 업그레이드돼요!<br>레벨이 올라갈수록 더 강한 공격력을 가집니다.<br>속도는 설정에서 조절해보세요!</p>
                         </div>
                         <div class="content-section">
                             <h2>🧩 포켓몬 수집</h2>
-                            <p>각 벽돌엔 포켓몬이 들어있어요.<br>부수면 해당 포켓몬이 당신의 팀에 추가돼요!</p>
+                            <p>각 벽돌 안에는 포켓몬이 들어있어요.<br>부수면 해당 포켓몬이 당신의 팀에 추가돼요!</p>
                         </div>
                         <div class="content-section">
                             <h2>💥 배틀</h2>
-                            <p>게임이 끝나면 수집한 포켓몬끼리 랜덤 대결을 펼칩니다!<br>마지막 가위바위보로 전설의 포켓몬과 한 판 승부?</p>
+                            <p>게임이 끝나면 수집한 포켓몬들과 함께 미니게임을 펼칩니다!<br>마지막 가위바위보로 전설의 포켓몬과 한 판 승부?</p>
                         </div>
                     </div>
                     <button id="htp-back-to-home-button" class="how-to-play-button">Back to Home</button>
                 </div>
             </div>
         `;
-    }
+  }
 
-    /**
-     * 스타일 정의
-     */
-    getStyles() {
-        return `
+  /**
+   * 스타일 정의
+   */
+  getStyles() {
+    return `
             <style>
                 @import url('https://fonts.googleapis.com/css2?family=Bungee&family=Do+Hyeon&display=swap');
                 
@@ -150,51 +149,49 @@ class HowToPlayPage {
                 }
             </style>
         `;
-    }
+  }
 
-    /**
-     * 페이지 마운트 후 초기화
-     */
-    async mount() {
-        this.container = document.querySelector('.how-to-play-page');
-        
-        this.styleElement = document.createElement('div');
-        this.styleElement.innerHTML = this.getStyles();
-        document.head.appendChild(this.styleElement);
-        
-        this.setupEventListeners();
-    }
+  /**
+   * 페이지 마운트 후 초기화
+   */
+  async mount() {
+    this.container = document.querySelector(".how-to-play-page");
 
-    /**
-     * 페이지 언마운트
-     */
-    unmount() {
-        if (this.styleElement && this.styleElement.parentNode) {
-            this.styleElement.parentNode.removeChild(this.styleElement);
-        }
-    }
+    this.styleElement = document.createElement("div");
+    this.styleElement.innerHTML = this.getStyles();
+    document.head.appendChild(this.styleElement);
 
-    /**
-     * 이벤트 리스너 설정
-     */
-    setupEventListeners() {
-        const backButton = document.getElementById('htp-back-to-home-button');
-        
-        if (backButton) {
-            backButton.addEventListener('click', () => {
-                this.navigateToHome();
-            });
-        }
-    }
+    this.setupEventListeners();
+  }
 
-    /**
-     * 홈으로 이동
-     */
-    navigateToHome() {
-        if (window.router) {
-            window.router.navigate('home');
-        }
+  /**
+   * 페이지 언마운트
+   */
+  unmount() {
+    if (this.styleElement && this.styleElement.parentNode) {
+      this.styleElement.parentNode.removeChild(this.styleElement);
     }
+  }
 
-    
-} 
+  /**
+   * 이벤트 리스너 설정
+   */
+  setupEventListeners() {
+    const backButton = document.getElementById("htp-back-to-home-button");
+
+    if (backButton) {
+      backButton.addEventListener("click", () => {
+        this.navigateToHome();
+      });
+    }
+  }
+
+  /**
+   * 홈으로 이동
+   */
+  navigateToHome() {
+    if (window.router) {
+      window.router.navigate("home");
+    }
+  }
+}
